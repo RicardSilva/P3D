@@ -1,41 +1,64 @@
+///////////////////////////////////////////////////////////////////////
+//
+// P3D Course
+// (c) 2016 by João Madeiras Pereira
+// TEMPLATE: Whitted Ray Tracing NFF scenes and drawing points with Modern OpenGL
+//
+//You should develop your rayTracing( Ray ray, int depth, float RefrIndex) which returns a color and
+// to develop your load_NFF function
+//
+///////////////////////////////////////////////////////////////////////
+
+#include <stdlib.h>
 #include <iostream>
-#include <fstream>
 #include <sstream>
 #include <string>
+#include <stdio.h>
 
-#include <vector>
+#include <GL/glew.h>
+#include <GL/freeglut.h>
 
-#include "engine.h"
+#include "scene.h"
+#include "color.h"
+#include "ray.h"
 
-#include "GL/glew.h"
-#include "GL/freeglut.h"
+#define CAPTION "ray tracer"
 
+#define VERTEX_COORD_ATTRIB 0
+#define COLOR_ATTRIB 1
 
+#define MAX_DEPTH 6
 
-#define CAPTION "Loading World"
-#define FPS 60
-using namespace engine;
+// Points defined by 2 attributes: positions which are stored in vertices array and colors which are stored in colors array
+float *colors;
+float *vertices;
+
+int size_vertices;
+int size_colors;
+
+GLfloat m[16];  //projection matrix initialized by ortho function
+
+GLuint VaoId;
+GLuint VboId[2];
+
+GLuint VertexShaderId, FragmentShaderId, ProgramId;
+GLint UniformId;
+
+Scene* scene = NULL;
+int RES_X, RES_Y;
+
+/* Draw Mode: 0 - point by point; 1 - line by line; 2 - full frame */
+int draw_mode = 1;
 
 int WindowHandle = 0;
-unsigned int FrameCount = 0;
 
-float CameraDistance = 5;
+///////////////////////////////////////////////////////////////////////  RAY-TRACE SCENE
 
-
-
-// Camera Position
-float camX, camY, camZ;
-
-// Mouse Tracking Variables
-int startX, startY, tracking = 0;
-
-// Camera Spherical Coordinates
-float alpha = 39.0f, beta = 51.0f;
-float r = 5.0f;
-
-Scene* scene;
-Camera *mainCamera;
-
+Color rayTracing(Ray ray, int depth, float RefrIndex)
+{
+	//TODO:
+	//INSERT HERE YOUR CODE
+}
 
 /////////////////////////////////////////////////////////////////////// ERRORS
 
@@ -50,293 +73,225 @@ bool isOpenGLError() {
 	}
 	return isError;
 }
+
 void checkOpenGLError(std::string error)
 {
 	if (isOpenGLError()) {
 		std::cerr << error << std::endl;
-		getchar();
 		exit(EXIT_FAILURE);
 	}
 }
-
-void createShaders()
+/////////////////////////////////////////////////////////////////////// SHADERs
+const GLchar* VertexShader =
 {
-	//default shader
-	Shader *defaultShader = new CubeShader("VerticeShader.glsl", "FragmentShader.glsl");
-	ShaderManager::Instance()->AddShader("defaultShader", defaultShader);
+	"#version 330 core\n"
 
-	//simpleCubeShader
-	Shader *cubeShader = new CubeShader("CubeVerticeShader.glsl", "CubeFragmentShader.glsl");
-	ShaderManager::Instance()->AddShader("cubeShader", cubeShader);
+	"in vec2 in_Position;\n"
+	"in vec3 in_Color;\n"
+	"uniform mat4 Matrix;\n"
+	"out vec4 color;\n"
+
+	"void main(void)\n"
+	"{\n"
+	"	vec4 position = vec4(in_Position, 0.0, 1.0);\n"
+	"	color = vec4(in_Color, 1.0);\n"
+	"	gl_Position = Matrix * position;\n"
+
+	"}\n"
+};
+
+const GLchar* FragmentShader =
+{
+	"#version 330 core\n"
+
+	"in vec4 color;\n"
+	"out vec4 out_Color;\n"
+
+	"void main(void)\n"
+	"{\n"
+	"	out_Color = color;\n"
+	"}\n"
+};
+
+void createShaderProgram()
+{
+	VertexShaderId = glCreateShader(GL_VERTEX_SHADER);
+	glShaderSource(VertexShaderId, 1, &VertexShader, 0);
+	glCompileShader(VertexShaderId);
+
+	FragmentShaderId = glCreateShader(GL_FRAGMENT_SHADER);
+	glShaderSource(FragmentShaderId, 1, &FragmentShader, 0);
+	glCompileShader(FragmentShaderId);
+
+	ProgramId = glCreateProgram();
+	glAttachShader(ProgramId, VertexShaderId);
+	glAttachShader(ProgramId, FragmentShaderId);
+
+	glBindAttribLocation(ProgramId, VERTEX_COORD_ATTRIB, "in_Position");
+	glBindAttribLocation(ProgramId, COLOR_ATTRIB, "in_Color");
+
+	glLinkProgram(ProgramId);
+	UniformId = glGetUniformLocation(ProgramId, "Matrix");
 
 	checkOpenGLError("ERROR: Could not create shaders.");
 }
-void destroyShaders()
+
+void destroyShaderProgram()
 {
-	ShaderManager::Instance()->Destroy();
+	glUseProgram(0);
+	glDetachShader(ProgramId, VertexShaderId);
+	glDetachShader(ProgramId, FragmentShaderId);
+
+	glDeleteShader(FragmentShaderId);
+	glDeleteShader(VertexShaderId);
+	glDeleteProgram(ProgramId);
+
 	checkOpenGLError("ERROR: Could not destroy shaders.");
 }
-
-void createTextures() {
-	Texture *catTexture = new Texture("csample.png");
-	TextureManager::Instance()->AddTexture("cat", catTexture);
-
-	Texture *stoneTexture = new Texture("stone.tga");
-	TextureManager::Instance()->AddTexture("stone", stoneTexture);
-	
-	checkOpenGLError("ERROR: Could not create textures.");
-}
-void destroyTextures()
+/////////////////////////////////////////////////////////////////////// VAOs & VBOs
+void createBufferObjects()
 {
-	TextureManager::Instance()->Destroy();
-	checkOpenGLError("ERROR: Could not destroy textures.");
+	glGenVertexArrays(1, &VaoId);
+	glBindVertexArray(VaoId);
+	glGenBuffers(2, VboId);
+	glBindBuffer(GL_ARRAY_BUFFER, VboId[0]);
+
+	/* Não é necessário fazer glBufferData, ou seja o envio dos pontos para a placa gráfica pois isso
+	é feito na drawPoints em tempo de execução com GL_DYNAMIC_DRAW */
+
+	glEnableVertexAttribArray(VERTEX_COORD_ATTRIB);
+	glVertexAttribPointer(VERTEX_COORD_ATTRIB, 2, GL_FLOAT, 0, 0, 0);
+
+	glBindBuffer(GL_ARRAY_BUFFER, VboId[1]);
+	glEnableVertexAttribArray(COLOR_ATTRIB);
+	glVertexAttribPointer(COLOR_ATTRIB, 3, GL_FLOAT, 0, 0, 0);
+
+	// unbind the VAO
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glDisableVertexAttribArray(VERTEX_COORD_ATTRIB);
+	glDisableVertexAttribArray(COLOR_ATTRIB);
+	checkOpenGLError("ERROR: Could not create VAOs and VBOs.");
 }
 
-void createMeshes() {
-	Mesh* cubeMesh = new Mesh(std::string("cube.obj"));
-	MeshManager::Instance()->AddMesh("cube", cubeMesh);
-
-	
-	checkOpenGLError("ERROR: Could not create meshes.");
-}
-void destroyMeshes() {
-	MeshManager::Instance()->Destroy();
-}
-
-void createMaterials() {
-}
-void destroyMaterials() {
-	MaterialManager::Instance()->Destroy();
-}
-
-void createCameras() {
-	mainCamera = new Camera(vec4());
-	
-	camX = r * sin(alpha * 3.14f / 180.0f) * cos(beta * 3.14f / 180.0f);
-	camZ = r * cos(alpha * 3.14f / 180.0f) * cos(beta * 3.14f / 180.0f);
-	camY = r *   						     sin(beta * 3.14f / 180.0f);
-
-	mainCamera->setViewMatrix(matFactory::LookAt(camX, camY, camZ, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f));
-	mainCamera->setProjMatrix(matFactory::PerspectiveProjection(60, (float)WinX / WinY, 0.1f, 20));
-}
-void destroyCameras() {
-	delete(mainCamera);
-}
-
-/////////////////////////////////////////////////////////////////////// SCENE
-void createScene() {
-	scene = new Scene(mainCamera, ShaderManager::Instance()->GetShader("cubeShader"));
-
-	SceneNode *root, *cube;
-
-	root = new SceneNode();
-	root->setMatrix(matFactory::Identity4());
-    scene->setRoot(root);
-
-	cube = new SceneNode();
-    cube->setMesh(MeshManager::Instance()->GetMesh("cube"));
-	cube->setTexture(TextureManager::Instance()->GetTexture("stone"));
-	cube->setMatrix(matFactory::Identity4());
-	cube->setShader(ShaderManager::Instance()->GetShader("cubeShader"));
-	root->addNode(cube);
-
-	checkOpenGLError("ERROR: Could not build scene.");
-
-}
-void destroyScene() {
-	delete(scene);
-}
-
-void drawScene()
+void destroyBufferObjects()
 {
-	
-	scene->draw();
+	glDisableVertexAttribArray(VERTEX_COORD_ATTRIB);
+	glDisableVertexAttribArray(COLOR_ATTRIB);
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
+
+	glDeleteBuffers(1, VboId);
+	glDeleteVertexArrays(1, &VaoId);
+	checkOpenGLError("ERROR: Could not destroy VAOs and VBOs.");
+}
+
+void drawPoints()
+{
+	glBindVertexArray(VaoId);
+	glUseProgram(ProgramId);
+
+	glBindBuffer(GL_ARRAY_BUFFER, VboId[0]);
+	glBufferData(GL_ARRAY_BUFFER, size_vertices, vertices, GL_DYNAMIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, VboId[1]);
+	glBufferData(GL_ARRAY_BUFFER, size_colors, colors, GL_DYNAMIC_DRAW);
+
+	glUniformMatrix4fv(UniformId, 1, GL_FALSE, m);
+	glDrawArrays(GL_POINTS, 0, RES_X*RES_Y);
+	glFinish();
+
+	glUseProgram(0);
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 	checkOpenGLError("ERROR: Could not draw scene.");
 }
 
-
 /////////////////////////////////////////////////////////////////////// CALLBACKS
+
+// Render function by primary ray casting from the eye towards the scene's objects
+
+void renderScene()
+{
+	int index_pos = 0;
+	int index_col = 0;
+
+	for (int y = 0; y < RES_Y; y++)
+	{
+		for (int x = 0; x < RES_X; x++)
+		{
+
+			//TODO: YOUR 2 FUNTIONS:
+			Ray ray = calculate PrimaryRay(x, y);
+			Color color = rayTracing(ray, 1, 1.0);
+
+			vertices[index_pos++] = (float)x;
+			vertices[index_pos++] = (float)y;
+			colors[index_col++] = color.r;
+			colors[index_col++] = color.g;
+			colors[index_col++] = color.b;
+
+			if (draw_mode == 0) {  // desenhar o conteúdo da janela ponto a ponto
+				drawPoints();
+				index_pos = 0;
+				index_col = 0;
+			}
+		}
+		printf("line %d", y);
+		if (draw_mode == 1) {  // desenhar o conteúdo da janela linha a linha
+			drawPoints();
+			index_pos = 0;
+			index_col = 0;
+		}
+	}
+
+	if (draw_mode == 2) //preenchar o conteúdo da janela com uma imagem completa
+		drawPoints();
+
+	printf("Terminou!\n");
+}
 
 void cleanup()
 {
-	destroyMeshes();
-	destroyTextures();
-	destroyShaders();
-	destroyCameras();
-	destroyScene();	
+	destroyShaderProgram();
+	destroyBufferObjects();
 }
 
-void display()
+void ortho(float left, float right, float bottom, float top,
+	float nearp, float farp)
 {
-	++FrameCount;
-	
-
-	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-	drawScene();
-	glutSwapBuffers();
-}
-
-void idle()
-{
-	
+	m[0 * 4 + 0] = 2 / (right - left);
+	m[0 * 4 + 1] = 0.0;
+	m[0 * 4 + 2] = 0.0;
+	m[0 * 4 + 3] = 0.0;
+	m[1 * 4 + 0] = 0.0;
+	m[1 * 4 + 1] = 2 / (top - bottom);
+	m[1 * 4 + 2] = 0.0;
+	m[1 * 4 + 3] = 0.0;
+	m[2 * 4 + 0] = 0.0;
+	m[2 * 4 + 1] = 0.0;
+	m[2 * 4 + 2] = -2 / (farp - nearp);
+	m[2 * 4 + 3] = 0.0;
+	m[3 * 4 + 0] = -(right + left) / (right - left);
+	m[3 * 4 + 1] = -(top + bottom) / (top - bottom);
+	m[3 * 4 + 2] = -(farp + nearp) / (farp - nearp);
+	m[3 * 4 + 3] = 1.0;
 }
 
 void reshape(int w, int h)
 {
-	float ratio;
-	// Prevent a divide by zero, when window is too short
-	if (h == 0)
-		h = 1;
-	// set the viewport to be the entire window
+	glClear(GL_COLOR_BUFFER_BIT);
 	glViewport(0, 0, w, h);
-	// set the projection matrix
-	ratio = (1.0f * w) / h;
-	mainCamera->setProjMatrix(matFactory::PerspectiveProjection(53.13f, ratio, 0.1f, 20.0f));
+	ortho(0, (float)RES_X, 0, (float)RES_Y, -1.0, 1.0);
 }
-void update() {}
-void timer(int value)
-{
-	std::ostringstream oss;
-	oss << CAPTION << ": " << FrameCount * 60 << " FPS @ (" << WinX << "x" << WinY << ")";
-	std::string s = oss.str();
-	glutSetWindow(WindowHandle);
-	glutSetWindowTitle(s.c_str());
-	FrameCount = 0;
-	glutPostRedisplay();
-	glutTimerFunc(1000, timer, 0);
-}
-void refresh(int value)
-{
-	glutPostRedisplay();
-	glutTimerFunc(1000 / FPS, refresh, 0);
-}
-
-void OnKeydown(unsigned char key, int x, int y) {
-	key = tolower(key);
-		
-	if (key == 27) {
-		glutLeaveMainLoop();
-	}
-	else if (key == 't') {}
-}
-
-void OnMouseDown(int button, int state, int xx, int yy) {
-	// start tracking the mouse
-	if (state == GLUT_DOWN) {
-		startX = xx;
-		startY = yy;
-		if (button == GLUT_LEFT_BUTTON)
-			tracking = 1;
-		else if (button == GLUT_RIGHT_BUTTON)
-			tracking = 2;
-	}
-
-	//stop tracking the mouse
-	else if (state == GLUT_UP) {
-		if (tracking == 1) {
-			alpha -= (xx - startX);
-			beta += (yy - startY);
-		}
-		else if (tracking == 2) {
-			r += (yy - startY) * 0.01f;
-			if (r < 0.1f)
-				r = 0.1f;
-		}
-		tracking = 0;
-	}
-}
-
-void OnMouseMove(int xx, int yy) {
-	int deltaX, deltaY;
-	float alphaAux, betaAux;
-	float rAux;
-
-	deltaX = -xx + startX;
-	deltaY = yy - startY;
-
-	// left mouse button: move camera
-	if (tracking == 1) {
-
-
-		alphaAux = alpha + deltaX;
-		betaAux = beta + deltaY;
-
-		if (betaAux > 85.0f)
-			betaAux = 85.0f;
-		else if (betaAux < -85.0f)
-			betaAux = -85.0f;
-		rAux = r;
-	}
-	// right mouse button: zoom
-	else if (tracking == 2) {
-
-		alphaAux = alpha;
-		betaAux = beta;
-		rAux = r + (deltaY * 0.01f);
-		if (rAux < 0.1f)
-			rAux = 0.1f;
-	}
-
-	camX = rAux * sin(alphaAux * 3.14f / 180.0f) * cos(betaAux * 3.14f / 180.0f);
-	camZ = rAux * cos(alphaAux * 3.14f / 180.0f) * cos(betaAux * 3.14f / 180.0f);
-	camY = rAux *   						       sin(betaAux * 3.14f / 180.0f);
-
-	mainCamera->setViewMatrix(matFactory::LookAt(camX, camY, camZ, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f));
-
-	//  uncomment this if not using an idle func
-	//	glutPostRedisplay();
-}
-
-void mouseWheel(int button, int direction, int x, int y)
-{
-	r -= direction * 0.7f;
-	if (r < 0.1f)
-		r = 0.1f;
-
-	camX = r * sin(alpha * 3.14f / 180.0f) * cos(beta * 3.14f / 180.0f);
-	camZ = r * cos(alpha * 3.14f / 180.0f) * cos(beta * 3.14f / 180.0f);
-	camY = r *   						     sin(beta * 3.14f / 180.0f);
-
-	mainCamera->setViewMatrix(matFactory::LookAt(camX, camY, camZ, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f));
-
-
-	//  uncomment this if not using an idle func
-	//	glutPostRedisplay();
-}
-
-	
 
 /////////////////////////////////////////////////////////////////////// SETUP
-
 void setupCallbacks()
 {
 	glutCloseFunc(cleanup);
-	glutDisplayFunc(display);
-	glutIdleFunc(idle);
+	glutDisplayFunc(renderScene);
 	glutReshapeFunc(reshape);
-
-	glutKeyboardFunc(OnKeydown);
-	glutMouseFunc(OnMouseDown);
-	glutMotionFunc(OnMouseMove);
-	glutMouseWheelFunc(mouseWheel);
-	glutTimerFunc(0, timer, 0);
-	glutTimerFunc(0, refresh, 0);
-}
-
-void setupOpenGL() {
-	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-	glEnable(GL_DEPTH_TEST);
-	glDepthFunc(GL_LEQUAL);
-	glDepthMask(GL_TRUE);
-	glDepthRange(0.0, 1.0);
-	glClearDepth(1.0);
-	glEnable(GL_CULL_FACE);
-	glCullFace(GL_BACK);
-	glFrontFace(GL_CCW);
-	glEnable(GL_CLIP_DISTANCE0);
 }
 
 void setupGLEW() {
@@ -346,11 +301,11 @@ void setupGLEW() {
 		std::cerr << "ERROR glewInit: " << glewGetString(result) << std::endl;
 		exit(EXIT_FAILURE);
 	}
+	GLenum err_code = glGetError();
 	printf("Vendor: %s\n", glGetString(GL_VENDOR));
 	printf("Renderer: %s\n", glGetString(GL_RENDERER));
 	printf("Version: %s\n", glGetString(GL_VERSION));
 	printf("GLSL: %s\n", glGetString(GL_SHADING_LANGUAGE_VERSION));
-	GLenum err_code = glGetError();
 }
 
 void setupGLUT(int argc, char* argv[])
@@ -363,8 +318,10 @@ void setupGLUT(int argc, char* argv[])
 
 	glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_GLUTMAINLOOP_RETURNS);
 
-	glutInitWindowSize(WinX, WinY);
-	glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
+	glutInitWindowPosition(640, 100);
+	glutInitWindowSize(RES_X, RES_Y);
+	glutInitDisplayMode(GLUT_SINGLE | GLUT_RGBA);
+	glDisable(GL_DEPTH_TEST);
 	WindowHandle = glutCreateWindow(CAPTION);
 	if (WindowHandle < 1) {
 		std::cerr << "ERROR: Could not create a new rendering window." << std::endl;
@@ -376,22 +333,50 @@ void init(int argc, char* argv[])
 {
 	setupGLUT(argc, argv);
 	setupGLEW();
-	setupOpenGL();
-
-	createShaders();
-	createMeshes();
-	createMaterials();
-	createTextures();
-	createCameras();
-	createScene();
+	std::cerr << "CONTEXT: OpenGL v" << glGetString(GL_VERSION) << std::endl;
+	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+	createShaderProgram();
+	createBufferObjects();
 	setupCallbacks();
 }
 
 int main(int argc, char* argv[])
 {
+	//TODO:	INSERT HERE YOUR CODE FOR PARSING NFF FILES
+	scene = new Scene();
+	if (!(scene->LoadSceneNFF("jap.nff"))) return 0;
+	RES_X = scene->GetCamera()->GetResX();
+	RES_Y = scene->GetCamera()->GetResY();
+
+	if (draw_mode == 0) { // desenhar o conteúdo da janela ponto a ponto
+		size_vertices = 2 * sizeof(float);
+		size_colors = 3 * sizeof(float);
+		printf("DRAWING MODE: POINT BY POINT\n");
+	}
+	else if (draw_mode == 1) { // desenhar o conteúdo da janela linha a linha
+		size_vertices = 2 * RES_X * sizeof(float);
+		size_colors = 3 * RES_X * sizeof(float);
+		printf("DRAWING MODE: LINE BY LINE\n");
+	}
+	else if (draw_mode == 2) { // preencher o conteúdo da janela com uma imagem completa
+		size_vertices = 2 * RES_X*RES_Y * sizeof(float);
+		size_colors = 3 * RES_X*RES_Y * sizeof(float);
+		printf("DRAWING MODE: FULL IMAGE\n");
+	}
+	else {
+		printf("Draw mode not valid \n");
+		exit(0);
+	}
+	printf("resx = %d  resy= %d.\n", RES_X, RES_Y);
+
+	vertices = (float*)malloc(size_vertices);
+	if (vertices == NULL) exit(1);
+
+	colors = (float*)malloc(size_colors);
+	if (colors == NULL) exit(1);
+
 	init(argc, argv);
 	glutMainLoop();
 	exit(EXIT_SUCCESS);
 }
-
 ///////////////////////////////////////////////////////////////////////

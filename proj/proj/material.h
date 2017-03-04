@@ -2,11 +2,11 @@
 
 #include "vec.h"
 
-struct Material {
-	vec4 diffuse;
-	vec4 ambient;
-	vec4 specular;
-	vec4 emissive;
-	float shininess;
-	int texCount;
+struct material {
+	vec3 color;
+	float Kd;
+	float Ks;
+	float shine;
+	float t;
+	float refraction_index;
 };

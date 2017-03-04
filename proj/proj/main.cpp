@@ -19,7 +19,7 @@
 #include <GL/freeglut.h>
 
 #include "scene.h"
-#include "color.h"
+#include "vec.h"
 #include "ray.h"
 
 #define CAPTION "ray tracer"
@@ -54,7 +54,7 @@ int WindowHandle = 0;
 
 ///////////////////////////////////////////////////////////////////////  RAY-TRACE SCENE
 
-Color rayTracing(Ray ray, int depth, float RefrIndex)
+vec3 rayTracing(Ray ray, int depth, float RefrIndex)
 {
 	//TODO:
 	//INSERT HERE YOUR CODE
@@ -214,42 +214,42 @@ void drawPoints()
 
 void renderScene()
 {
-	int index_pos = 0;
-	int index_col = 0;
+	//int index_pos = 0;
+	//int index_col = 0;
 
-	for (int y = 0; y < RES_Y; y++)
-	{
-		for (int x = 0; x < RES_X; x++)
-		{
+	//for (int y = 0; y < RES_Y; y++)
+	//{
+	//	for (int x = 0; x < RES_X; x++)
+	//	{
 
-			//TODO: YOUR 2 FUNTIONS:
-			Ray ray = calculate PrimaryRay(x, y);
-			Color color = rayTracing(ray, 1, 1.0);
+	//		//TODO: YOUR 2 FUNTIONS:
+	//		Ray ray = PrimaryRay(x, y);
+	//		vec3 color = rayTracing(ray, 1, 1.0);
 
-			vertices[index_pos++] = (float)x;
-			vertices[index_pos++] = (float)y;
-			colors[index_col++] = color.r;
-			colors[index_col++] = color.g;
-			colors[index_col++] = color.b;
+	//		vertices[index_pos++] = (float)x;
+	//		vertices[index_pos++] = (float)y;
+	//		colors[index_col++] = color.x;
+	//		colors[index_col++] = color.y;
+	//		colors[index_col++] = color.z;
 
-			if (draw_mode == 0) {  // desenhar o conteúdo da janela ponto a ponto
-				drawPoints();
-				index_pos = 0;
-				index_col = 0;
-			}
-		}
-		printf("line %d", y);
-		if (draw_mode == 1) {  // desenhar o conteúdo da janela linha a linha
-			drawPoints();
-			index_pos = 0;
-			index_col = 0;
-		}
-	}
+	//		if (draw_mode == 0) {  // desenhar o conteúdo da janela ponto a ponto
+	//			drawPoints();
+	//			index_pos = 0;
+	//			index_col = 0;
+	//		}
+	//	}
+	//	printf("line %d", y);
+	//	if (draw_mode == 1) {  // desenhar o conteúdo da janela linha a linha
+	//		drawPoints();
+	//		index_pos = 0;
+	//		index_col = 0;
+	//	}
+	//}
 
-	if (draw_mode == 2) //preenchar o conteúdo da janela com uma imagem completa
-		drawPoints();
+	//if (draw_mode == 2) //preenchar o conteúdo da janela com uma imagem completa
+	//	drawPoints();
 
-	printf("Terminou!\n");
+	//printf("Terminou!\n");
 }
 
 void cleanup()
@@ -345,8 +345,8 @@ int main(int argc, char* argv[])
 	//TODO:	INSERT HERE YOUR CODE FOR PARSING NFF FILES
 	scene = new Scene();
 	if (!(scene->LoadSceneNFF("jap.nff"))) return 0;
-	RES_X = scene->GetCamera()->GetResX();
-	RES_Y = scene->GetCamera()->GetResY();
+	RES_X = scene->GetCamera().resolutionX;
+	RES_Y = scene->GetCamera().resolutionY;
 
 	if (draw_mode == 0) { // desenhar o conteúdo da janela ponto a ponto
 		size_vertices = 2 * sizeof(float);

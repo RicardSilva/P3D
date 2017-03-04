@@ -3,24 +3,19 @@
 #include "vec.h"
 #include "mat.h"
 
-class Camera {
-protected:
-
-	mat4 viewMatrix;
-	mat4 projMatrix;
+struct camera {
+	
+	vec3 from;
+	vec3 at;
+	vec3 up;
+	int angle;
+	float hither;
+	int resolutionX;
+	int resolutionY;
 
 
 public:
-	Camera();
-	Camera(vec4 &v);
-
-	virtual ~Camera();
-
-	void setViewMatrix(mat4 &m);
-	mat4 getViewMatrix();
-
-	void setProjMatrix(mat4 &m);
-	mat4 getProjMatrix();
+	camera() {}
 
 };
 

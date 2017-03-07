@@ -9,6 +9,7 @@
 #include <sstream>
 #include <fstream>
 #include <vector>
+#include <string>
 
 class Scene {
 private:

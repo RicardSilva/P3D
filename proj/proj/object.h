@@ -6,7 +6,7 @@ struct object {
 	vec3 pos;
 	material mat;
 
-	object() {}
+	object() : pos(), mat() {}
 	object(vec3 pos, material mat) : pos(pos), mat(mat) {}
 
 };

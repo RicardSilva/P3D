@@ -58,6 +58,7 @@ vec3 rayTracing(Ray ray, int depth, float RefrIndex)
 {
 	//TODO:
 	//INSERT HERE YOUR CODE
+	return vec3(0.5f,0.5f,1);
 }
 
 /////////////////////////////////////////////////////////////////////// ERRORS
@@ -155,22 +156,24 @@ void createBufferObjects()
 	glBindVertexArray(VaoId);
 	glGenBuffers(2, VboId);
 	glBindBuffer(GL_ARRAY_BUFFER, VboId[0]);
-
+	
 	/* Não é necessário fazer glBufferData, ou seja o envio dos pontos para a placa gráfica pois isso
 	é feito na drawPoints em tempo de execução com GL_DYNAMIC_DRAW */
 
 	glEnableVertexAttribArray(VERTEX_COORD_ATTRIB);
 	glVertexAttribPointer(VERTEX_COORD_ATTRIB, 2, GL_FLOAT, 0, 0, 0);
+	
 
 	glBindBuffer(GL_ARRAY_BUFFER, VboId[1]);
 	glEnableVertexAttribArray(COLOR_ATTRIB);
 	glVertexAttribPointer(COLOR_ATTRIB, 3, GL_FLOAT, 0, 0, 0);
-
 	// unbind the VAO
+
+	
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glDisableVertexAttribArray(VERTEX_COORD_ATTRIB);
-	glDisableVertexAttribArray(COLOR_ATTRIB);
+	//glDisableVertexAttribArray(VERTEX_COORD_ATTRIB);
+	//glDisableVertexAttribArray(COLOR_ATTRIB);
 	checkOpenGLError("ERROR: Could not create VAOs and VBOs.");
 }
 
@@ -214,42 +217,42 @@ void drawPoints()
 
 void renderScene()
 {
-	//int index_pos = 0;
-	//int index_col = 0;
+	int index_pos = 0;
+	int index_col = 0;
 
-	//for (int y = 0; y < RES_Y; y++)
-	//{
-	//	for (int x = 0; x < RES_X; x++)
-	//	{
+	for (int y = 0; y < RES_Y; y++)
+	{
+		for (int x = 0; x < RES_X; x++)
+		{
 
-	//		//TODO: YOUR 2 FUNTIONS:
-	//		Ray ray = PrimaryRay(x, y);
-	//		vec3 color = rayTracing(ray, 1, 1.0);
+			//TODO: YOUR 2 FUNTIONS:
+			Ray ray = scene->GetCamera().getPrimaryRay(x, y);
+			vec3 color = rayTracing(ray, 1, 1.0);
 
-	//		vertices[index_pos++] = (float)x;
-	//		vertices[index_pos++] = (float)y;
-	//		colors[index_col++] = color.x;
-	//		colors[index_col++] = color.y;
-	//		colors[index_col++] = color.z;
+			vertices[index_pos++] = (float)x;
+			vertices[index_pos++] = (float)y;
+			colors[index_col++] = color.x;
+			colors[index_col++] = color.y;
+			colors[index_col++] = color.z;
 
-	//		if (draw_mode == 0) {  // desenhar o conteúdo da janela ponto a ponto
-	//			drawPoints();
-	//			index_pos = 0;
-	//			index_col = 0;
-	//		}
-	//	}
-	//	printf("line %d", y);
-	//	if (draw_mode == 1) {  // desenhar o conteúdo da janela linha a linha
-	//		drawPoints();
-	//		index_pos = 0;
-	//		index_col = 0;
-	//	}
-	//}
+			if (draw_mode == 0) {  // desenhar o conteúdo da janela ponto a ponto
+				drawPoints();
+				index_pos = 0;
+				index_col = 0;
+			}
+		}
+		printf("line %d", y);
+		if (draw_mode == 1) {  // desenhar o conteúdo da janela linha a linha
+			drawPoints();
+			index_pos = 0;
+			index_col = 0;
+		}
+	}
 
-	//if (draw_mode == 2) //preenchar o conteúdo da janela com uma imagem completa
-	//	drawPoints();
+	if (draw_mode == 2) //preenchar o conteúdo da janela com uma imagem completa
+		drawPoints();
 
-	//printf("Terminou!\n");
+	printf("Terminou!\n");
 }
 
 void cleanup()
@@ -342,9 +345,8 @@ void init(int argc, char* argv[])
 
 int main(int argc, char* argv[])
 {
-	//TODO:	INSERT HERE YOUR CODE FOR PARSING NFF FILES
 	scene = new Scene();
-	if (!(scene->LoadSceneNFF("jap.nff"))) return 0;
+	if (scene->LoadSceneNFF("jap.nff") != 0) return 0;
 	RES_X = scene->GetCamera().resolutionX;
 	RES_Y = scene->GetCamera().resolutionY;
 

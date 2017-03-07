@@ -20,32 +20,56 @@ int Scene::LoadSceneNFF(std::string fileName) {
 		sin = std::stringstream(line);
 		sin >> keyword;
 
-		if (keyword == "v") {
+		if (keyword.compare("v") == 0) {
 			std::getline(ifile, line);
-			ParseFrom(std::stringstream(line));
+			sin = std::stringstream(line);
+			vec3 eye = vec3();
+			vec3 at = vec3();
+			vec3 up = vec3();
+			float fovy;
+			float near;
+			int resX, resY;
+			//EYE
+			std::string junk;
+			sin >> junk >> eye.x >> eye.y >> eye.z;
 			std::getline(ifile, line);
-			ParseAt(std::stringstream(line));
+			sin = std::stringstream(line);
+			//AT
+			sin >> junk >> at.x >> at.y >> at.z;
 			std::getline(ifile, line);
-			ParseUp(std::stringstream(line));
+			sin = std::stringstream(line);
+			//UP
+			sin >> junk >> up.x >> up.y >> up.z;
 			std::getline(ifile, line);
-			ParseAngle(std::stringstream(line));
+			sin = std::stringstream(line);
+			//FOVY
+			sin >> junk >> fovy;
 			std::getline(ifile, line);
-			ParseHither(std::stringstream(line));
+			sin = std::stringstream(line);
+			//NEAR
+			sin >> junk >> near;
 			std::getline(ifile, line);
-			ParseResolution(std::stringstream(line));
+			sin = std::stringstream(line);
+			//RESOLUTION
+			sin >> junk >> resX >> resY;
+
+			this->cam = camera(eye, at, up, fovy, near, 1000, resX, resY);
+			
 		}
-		else if (keyword == "b") ParseBackground(sin);
-		else if (keyword == "l") ParseLight(sin);
-		else if (keyword == "f") ParseMaterial(sin);
-		else if (keyword == "c") {
+		else if (keyword.compare("b") == 0) {
+			ParseBackground(sin);
+		}
+		else if (keyword.compare("l") == 0) ParseLight(sin);
+		else if (keyword.compare("f") == 0) ParseMaterial(sin);
+		else if (keyword.compare("c") == 0) {
 			ParseCylinder(sin);
 			std::getline(ifile, line);
 			ParseCylinderBase(std::stringstream(line));
 			std::getline(ifile, line);
 			ParseCylinderApex(std::stringstream(line));
 		}
-		else if (keyword == "s") ParseSphere(sin);
-		else if (keyword == "p") {
+		else if (keyword.compare("s") == 0) ParseSphere(sin);
+		else if (keyword.compare("p") == 0) {
 			int total_vertices;
 			sin >> total_vertices;
 			for (int i = 0; i < total_vertices; i++) {
@@ -53,7 +77,7 @@ int Scene::LoadSceneNFF(std::string fileName) {
 				ParsePolygon(std::stringstream(line));
 			}
 		}
-		else if (keyword == "pp") 
+		else if (keyword.compare("pp") == 0)
 		{
 			int total_vertices;
 			sin >> total_vertices;
@@ -62,7 +86,7 @@ int Scene::LoadSceneNFF(std::string fileName) {
 				ParsePolygonPatch(std::stringstream(line));
 			}
 		}
-		else if (keyword == "pl") ParsePlane(sin);
+		else if (keyword.compare("pl") == 0) ParsePlane(sin);
 
 	}
 	return 0;
@@ -83,30 +107,6 @@ void Scene::ParseLight(std::stringstream& sin) {
 void Scene::ParseMaterial(std::stringstream& sin) {
 	sin >> mat.color.x >> mat.color.y >> mat.color.z >> mat.Kd >> mat.Ks >> mat.shine >> mat.t >> mat.refraction_index;
 }
-void Scene::ParseFrom(std::stringstream& sin) {
-	std::string junk;
-	sin >> junk >> cam.from.x >> cam.from.y >> cam.from.z;
-}
-void Scene::ParseAt(std::stringstream& sin) {
-	std::string junk;
-	sin >> junk >> cam.at.x >> cam.at.y >> cam.at.z;
-}
-void Scene::ParseUp(std::stringstream& sin) {
-	std::string junk;
-	sin >> junk >> cam.up.x >> cam.up.y >> cam.up.z;
-}
-void Scene::ParseAngle(std::stringstream& sin) {
-	std::string junk;
-	sin >> junk >> cam.angle;
-}
-void Scene::ParseHither(std::stringstream& sin) {
-	std::string junk;
-	sin >> junk >> cam.hither;
-}
-void Scene::ParseResolution(std::stringstream& sin) {
-	std::string junk;
-	sin >> junk >> cam.resolutionX >> cam.resolutionY;
-}
 void Scene::ParseCylinder(std::stringstream& sin) {
 	std::cerr << "Not implemented: " << __FUNCTION__ << std::endl;
 }
@@ -117,7 +117,7 @@ void Scene::ParseCylinderApex(std::stringstream& sin) {
 	std::cerr << "Not implemented: " << __FUNCTION__ << std::endl;
 }
 void Scene::ParseSphere(std::stringstream& sin) {
-	sphere s;
+	sphere s = sphere();
 	sin >> s.pos.x >> s.pos.y >> s.pos.z >> s.radius;
 	s.mat = mat;
 	objects.push_back(s);

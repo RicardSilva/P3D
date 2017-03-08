@@ -10,30 +10,35 @@
 #include <fstream>
 #include <vector>
 #include <string>
+#include <memory>
 
 class Scene {
 private:
 	vec3 backgroundColor;
 	camera cam;
 	material mat;
-	std::vector <light> lights;
-	std::vector <object> objects;
+	std::vector <light*> lights;
+	std::vector <object*> objects;
 
 
 public:
-	Scene();
-	virtual ~Scene();
-	int LoadSceneNFF(std::string fileName);
+	Scene() {
+		backgroundColor = vec3(0.0f, 0.0f, 0.0f);
+	}
+	virtual ~Scene() {
+		for (auto &object : objects) {
+			delete object;
+		}
+		for (auto &light : lights) {
+			delete light;
+		}
+	}
+
+	bool LoadSceneNFF(std::string fileName);
 
 	void ParseBackground(std::stringstream& sin);
 	void ParseLight(std::stringstream& sin);
 	void ParseMaterial(std::stringstream& sin);
-	void ParseFrom(std::stringstream& sin);
-	void ParseAt(std::stringstream& sin);
-	void ParseUp(std::stringstream& sin);
-	void ParseAngle(std::stringstream& sin);
-	void ParseHither(std::stringstream& sin);
-	void ParseResolution(std::stringstream& sin);
 	void ParseCylinder(std::stringstream& sin);
 	void ParseCylinderBase(std::stringstream& sin);
 	void ParseCylinderApex(std::stringstream& sin);
@@ -45,6 +50,14 @@ public:
 	camera GetCamera() {
 		return cam;
 	}
-
+	vec3 GetBackgroundColor() {
+		return backgroundColor;
+	}
+	std::vector<object*> GetObjects() {
+		return objects;
+	}
+	std::vector<light*> GetLights() {
+		return lights;
+	}
 };
 

@@ -9,7 +9,7 @@ struct camera {
 	vec3 eye;
 	vec3 at;
 	vec3 up;
-	int fovy;
+	float fovy;
 	float nearp, farp;
 
 	int resolutionX;
@@ -37,7 +37,7 @@ public:
 
 	}
 
-	Ray getPrimaryRay(int x, int y);
+	ray getPrimaryRay(int x, int y);
 
 };
 

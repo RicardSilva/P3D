@@ -1,16 +1,11 @@
 #include "scene.h"
 
-Scene::Scene() {
-	backgroundColor = vec3(0.0f, 0.0f, 0.0f);
-}
-Scene::~Scene() {}
 
-int Scene::LoadSceneNFF(std::string fileName) {
-	
+bool Scene::LoadSceneNFF(std::string fileName) {
 	std::ifstream ifile(fileName);
 	if (ifile.fail()) {
 		std::cerr << "Could not open file: " << fileName << std::endl;
-		return -1;
+		return false;
 	}
 	std::string line;
 	std::string keyword;
@@ -21,44 +16,43 @@ int Scene::LoadSceneNFF(std::string fileName) {
 		sin >> keyword;
 
 		if (keyword.compare("v") == 0) {
-			std::getline(ifile, line);
-			sin = std::stringstream(line);
 			vec3 eye = vec3();
 			vec3 at = vec3();
 			vec3 up = vec3();
 			float fovy;
 			float near;
 			int resX, resY;
-			//EYE
 			std::string junk;
+		
+			//EYE
+			std::getline(ifile, line);
+			sin = std::stringstream(line);
 			sin >> junk >> eye.x >> eye.y >> eye.z;
-			std::getline(ifile, line);
-			sin = std::stringstream(line);
 			//AT
+			std::getline(ifile, line);
+			sin = std::stringstream(line);
 			sin >> junk >> at.x >> at.y >> at.z;
-			std::getline(ifile, line);
-			sin = std::stringstream(line);
 			//UP
+			std::getline(ifile, line);
+			sin = std::stringstream(line);		
 			sin >> junk >> up.x >> up.y >> up.z;
-			std::getline(ifile, line);
-			sin = std::stringstream(line);
 			//FOVY
+			std::getline(ifile, line);
+			sin = std::stringstream(line);
 			sin >> junk >> fovy;
-			std::getline(ifile, line);
-			sin = std::stringstream(line);
 			//NEAR
-			sin >> junk >> near;
 			std::getline(ifile, line);
 			sin = std::stringstream(line);
+			sin >> junk >> near;
 			//RESOLUTION
+			std::getline(ifile, line);
+			sin = std::stringstream(line);
 			sin >> junk >> resX >> resY;
 
 			this->cam = camera(eye, at, up, fovy, near, 1000, resX, resY);
 			
 		}
-		else if (keyword.compare("b") == 0) {
-			ParseBackground(sin);
-		}
+		else if (keyword.compare("b") == 0) ParseBackground(sin);
 		else if (keyword.compare("l") == 0) ParseLight(sin);
 		else if (keyword.compare("f") == 0) ParseMaterial(sin);
 		else if (keyword.compare("c") == 0) {
@@ -89,23 +83,30 @@ int Scene::LoadSceneNFF(std::string fileName) {
 		else if (keyword.compare("pl") == 0) ParsePlane(sin);
 
 	}
-	return 0;
+	return true;
 }
 
 void Scene::ParseBackground(std::stringstream& sin) {
-	sin >> backgroundColor.x >> backgroundColor.y >> backgroundColor.z;
+	vec3 backColor = vec3();
+	sin >> backColor.x >> backColor.y >> backColor.z;
+	backgroundColor = backColor;
 }
 void Scene::ParseLight(std::stringstream& sin) {
-	light l;
-	sin >> l.position.x >> l.position.y >> l.position.z;
+	vec3 position = vec3();
+	vec3 color = vec3();
+	sin >> position.x >> position.y >> position.z;
 	if (!sin.eof())
-		sin >> l.color.x >> l.color.y >> l.color.z;
+		sin >> color.x >> color.y >> color.z;
 	else
-		l.color = vec3(1.0f, 1.0f, 1.0f);
+		color = vec3(1.0f, 1.0f, 1.0f);
+	light *l = new light(position, color);
 	lights.push_back(l);
 }
 void Scene::ParseMaterial(std::stringstream& sin) {
-	sin >> mat.color.x >> mat.color.y >> mat.color.z >> mat.Kd >> mat.Ks >> mat.shine >> mat.t >> mat.refraction_index;
+	vec3 color = vec3();
+	float Kd, Ks, shine, t, refraction_index;
+	sin >> color.x >> color.y >> color.z >> Kd >> Ks >> shine >> t >> refraction_index;
+	this->mat = material(color, Kd, Ks, shine, t, refraction_index);
 }
 void Scene::ParseCylinder(std::stringstream& sin) {
 	std::cerr << "Not implemented: " << __FUNCTION__ << std::endl;
@@ -117,9 +118,10 @@ void Scene::ParseCylinderApex(std::stringstream& sin) {
 	std::cerr << "Not implemented: " << __FUNCTION__ << std::endl;
 }
 void Scene::ParseSphere(std::stringstream& sin) {
-	sphere s = sphere();
-	sin >> s.pos.x >> s.pos.y >> s.pos.z >> s.radius;
-	s.mat = mat;
+	vec3 position = vec3();
+	float radius;
+	sin >> position.x >> position.y >> position.z >> radius;
+	sphere *s = new sphere(position, radius, this->mat);
 	objects.push_back(s);
 }
 void Scene::ParsePolygon(std::stringstream& sin) {
@@ -129,14 +131,12 @@ void Scene::ParsePolygonPatch(std::stringstream& sin) {
 	std::cerr << "Not implemented: " << __FUNCTION__ << std::endl;
 }
 void Scene::ParsePlane(std::stringstream& sin) {
-	plane p;
-	vec3 point;
-	sin >> point.x >> point.y >> point.z;
-	p.point1 = point;
-	sin >> point.x >> point.y >> point.z;
-	p.point2 = point;
-	sin >> point.x >> point.y >> point.z;
-	p.point3 = point;
-	p.mat = mat;
+	vec3 point1 = vec3();
+	vec3 point2 = vec3();
+	vec3 point3 = vec3();
+	sin >> point1.x >> point1.y >> point1.z;
+	sin >> point2.x >> point2.y >> point2.z;
+	sin >> point3.x >> point3.y >> point3.z;
+	plane *p = new plane(point1, point2, point3, this->mat);
 	objects.push_back(p);
 }

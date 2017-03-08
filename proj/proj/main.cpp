@@ -27,7 +27,7 @@
 #define VERTEX_COORD_ATTRIB 0
 #define COLOR_ATTRIB 1
 
-#define MAX_DEPTH 6
+#define MAX_DEPTH 3
 
 // Points defined by 2 attributes: positions which are stored in vertices array and colors which are stored in colors array
 float *colors;
@@ -54,11 +54,10 @@ int WindowHandle = 0;
 
 ///////////////////////////////////////////////////////////////////////  RAY-TRACE SCENE
 
-vec3 rayTracing(Ray ray, int depth, float RefrIndex)
+vec3 rayTracing(ray &ray, int depth, float RefrIndex)
 {
-	//TODO:
-	//INSERT HERE YOUR CODE
-	return vec3(0.5f,0.5f,1);
+	return vec3(0.5f, 0.5f, 1.0f);
+	
 }
 
 /////////////////////////////////////////////////////////////////////// ERRORS
@@ -169,11 +168,8 @@ void createBufferObjects()
 	glVertexAttribPointer(COLOR_ATTRIB, 3, GL_FLOAT, 0, 0, 0);
 	// unbind the VAO
 
-	
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	//glDisableVertexAttribArray(VERTEX_COORD_ATTRIB);
-	//glDisableVertexAttribArray(COLOR_ATTRIB);
 	checkOpenGLError("ERROR: Could not create VAOs and VBOs.");
 }
 
@@ -224,9 +220,7 @@ void renderScene()
 	{
 		for (int x = 0; x < RES_X; x++)
 		{
-
-			//TODO: YOUR 2 FUNTIONS:
-			Ray ray = scene->GetCamera().getPrimaryRay(x, y);
+			ray ray = scene->GetCamera().getPrimaryRay(x, y);
 			vec3 color = rayTracing(ray, 1, 1.0);
 
 			vertices[index_pos++] = (float)x;
@@ -346,7 +340,7 @@ void init(int argc, char* argv[])
 int main(int argc, char* argv[])
 {
 	scene = new Scene();
-	if (scene->LoadSceneNFF("jap.nff") != 0) return 0;
+	if (!(scene->LoadSceneNFF("jap.nff"))) return 0;
 	RES_X = scene->GetCamera().resolutionX;
 	RES_Y = scene->GetCamera().resolutionY;
 

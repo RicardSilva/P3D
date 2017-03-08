@@ -4,3 +4,4 @@ proj/proj/obj/x64/Debug/
 proj/proj.opensdf
 *.log
 *.tlog
+*.opendb

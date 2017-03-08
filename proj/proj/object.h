@@ -1,12 +1,16 @@
 #pragma once
 #include "material.h"
 #include "vec.h"
+#include "ray.h"
 
 struct object {
-	vec3 pos;
 	material mat;
 
-	object() : pos(), mat() {}
-	object(vec3 pos, material mat) : pos(pos), mat(mat) {}
+	object() {}
+	object(material &mat) : mat(mat) {}
+
+
+	//RETURNS FIRST HIT POINT IF IT EXISTS
+	virtual float CheckRayIntersection(ray &ray) = 0;
 
 };

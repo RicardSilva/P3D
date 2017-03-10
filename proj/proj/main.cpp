@@ -48,7 +48,7 @@ Scene* scene = NULL;
 int RES_X, RES_Y;
 
 /* Draw Mode: 0 - point by point; 1 - line by line; 2 - full frame */
-int draw_mode = 1;
+int draw_mode = 0;
 
 int WindowHandle = 0;
 
@@ -56,8 +56,61 @@ int WindowHandle = 0;
 
 vec3 rayTracing(ray &ray, int depth, float RefrIndex)
 {
-	return vec3(0.5f, 0.5f, 1.0f);
+	vec3 color;
+
 	
+	bool hit = false;
+	float closestDistance = FLT_MAX;
+	vec3 closestHitpoint;
+	object* closestObj = nullptr;
+
+	float distance;
+	vec3 hitpoint;
+	
+	const std::vector<object*> objs = scene->GetObjects();
+	//intersect ray with all objects and find a hit point(if any) closest to the start of the ray
+	for (auto obj : objs) {
+		if (obj->CheckRayCollision(ray, &distance, &hitpoint) == true) {
+			hit = true;
+			if (distance < closestDistance) {
+				closestObj = obj;
+				closestHitpoint = hitpoint;
+			}
+		}
+	}
+	if (hit == false)
+		return scene->GetBackgroundColor();
+	else {
+		vec3 normal;
+		//get object ambient color
+		color = closestObj->GetMaterial().color;
+		//TODO: REMOVE NEXT LINE
+		return color;
+		//compute normal at the hit point;
+		//normal = closestObj->ComputeNormal(closestHitpoint);
+		//const std::vector<light*> lights = scene->GetLights();
+		//for (auto light : lights) {
+		//	//unit light vector from hit point to light source
+		//	vec3 l;
+		//	l = light->ComputeL(closestHitpoint);
+		//	if (DotProduct(l, normal) > 0)
+		//		if (!point in shadow); //trace shadow ray
+		//	color += diffuse color + specular color;
+		//}
+		if (depth >= MAX_DEPTH) return color;
+		/*if (reflective object) {
+			rRay = calculate ray in the reflected direction;
+			rColor = trace(scene, point, rRay direction, depth + 1);
+			reduce rColor by the specular reflection coefficient and add to color;
+		}
+		if (translucid object) {
+			tRay = calculate ray in the refracted direction;
+			tColor = trace(scene, point, tRay direction, depth + 1);
+			reduce tColor by the transmittance coefficient and add to color;
+		}*/
+
+	}
+	return color;
 }
 
 /////////////////////////////////////////////////////////////////////// ERRORS

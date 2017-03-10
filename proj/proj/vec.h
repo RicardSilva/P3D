@@ -152,6 +152,7 @@ struct vec3 {
 	friend vec3 Lerp(const vec3 &v1, const vec3 &v2, float k) {
 		return (1 - k) * v1 + k * v2;
 	}
+	
 
 	void Clean();
 	void MakeZero();
@@ -161,6 +162,7 @@ struct vec3 {
 	float Magnitude();
 	void Normalize();
 	vec3 Normalized();
+	
 
 	const float* Export() const;
 };

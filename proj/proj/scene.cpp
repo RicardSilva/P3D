@@ -118,10 +118,10 @@ void Scene::ParseCylinderApex(std::stringstream& sin) {
 	std::cerr << "Not implemented: " << __FUNCTION__ << std::endl;
 }
 void Scene::ParseSphere(std::stringstream& sin) {
-	vec3 position = vec3();
+	vec3 centre = vec3();
 	float radius;
-	sin >> position.x >> position.y >> position.z >> radius;
-	sphere *s = new sphere(position, radius, this->mat);
+	sin >> centre.x >> centre.y >> centre.z >> radius;
+	sphere *s = new sphere(centre, radius, this->mat);
 	objects.push_back(s);
 }
 void Scene::ParsePolygon(std::stringstream& sin) {

@@ -53,10 +53,10 @@ public:
 	vec3 GetBackgroundColor() {
 		return backgroundColor;
 	}
-	std::vector<object*> GetObjects() {
+	const std::vector<object*> GetObjects() {
 		return objects;
 	}
-	std::vector<light*> GetLights() {
+	const std::vector<light*> GetLights() {
 		return lights;
 	}
 };

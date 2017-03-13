@@ -2,6 +2,8 @@
 #include "material.h"
 #include "vec.h"
 #include "ray.h"
+#include "light.h"
+#include <stdlib.h>
 
 class object {
 
@@ -11,12 +13,13 @@ public:
 	object() {}
 	object(const material &mat) : mat(mat) {}
 
-	const material GetMaterial() {
-		return mat;
-	}
+
+	vec3 GetAmbientColor();
+	vec3 GetDiffuseColor(light &light, vec3 &normal, vec3 &l);
+	vec3 GetSpecularColor(light &light, vec3 &normal, vec3 &l, vec3 &v);
 
 	//RETURNS FIRST HIT POINT IF IT EXISTS
 	virtual bool CheckRayCollision(const ray &ray, float *distance, vec3 *hitpoint) = 0;
-	virtual vec3 ComputeNormal(const ray &ray, const vec3 &point) = 0;
+	virtual vec3 GetNormal(const ray &ray, const vec3 &point) = 0;
 
 };

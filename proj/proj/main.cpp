@@ -48,7 +48,7 @@ Scene* scene = NULL;
 int RES_X, RES_Y;
 
 /* Draw Mode: 0 - point by point; 1 - line by line; 2 - full frame */
-int draw_mode = 0;
+int draw_mode = 2;
 
 int WindowHandle = 0;
 
@@ -69,10 +69,11 @@ vec3 rayTracing(ray &ray, int depth, float RefrIndex)
 	
 	const std::vector<object*> objs = scene->GetObjects();
 	//intersect ray with all objects and find a hit point(if any) closest to the start of the ray
-	for (auto obj : objs) {
+	for (auto &obj : objs) {
 		if (obj->CheckRayCollision(ray, &distance, &hitpoint) == true) {
 			hit = true;
 			if (distance < closestDistance) {
+				closestDistance = distance;
 				closestObj = obj;
 				closestHitpoint = hitpoint;
 			}
@@ -82,21 +83,37 @@ vec3 rayTracing(ray &ray, int depth, float RefrIndex)
 		return scene->GetBackgroundColor();
 	else {
 		vec3 normal;
+		vec3 l;
 		//get object ambient color
-		color = closestObj->GetMaterial().color;
-		//TODO: REMOVE NEXT LINE
-		return color;
+		color = closestObj->GetAmbientColor();
+		
 		//compute normal at the hit point;
-		//normal = closestObj->ComputeNormal(closestHitpoint);
-		//const std::vector<light*> lights = scene->GetLights();
-		//for (auto light : lights) {
-		//	//unit light vector from hit point to light source
-		//	vec3 l;
-		//	l = light->ComputeL(closestHitpoint);
-		//	if (DotProduct(l, normal) > 0)
-		//		if (!point in shadow); //trace shadow ray
-		//	color += diffuse color + specular color;
-		//}
+		normal = closestObj->GetNormal(ray, closestHitpoint);
+		const std::vector<light*> lights = scene->GetLights();
+		struct ray shadowFiller;
+		for (auto &light : lights) {
+			//unit light vector from hit point to light source
+			l = light->ComputeL(closestHitpoint);
+			//offset the hitpoint to avoid self intersection
+			shadowFiller = struct ray(closestHitpoint + l * 0.0001, l);
+			hit = false;
+			//trace shadow ray
+			if (DotProduct(normal, l) > 0) {
+				for (auto &obj : objs) {
+					//check if object is in shadow by checking if light ray collides with any object
+					if (obj->CheckRayCollision(shadowFiller, nullptr, nullptr) == true) {
+						hit = true;
+						break;
+					}
+				}
+				//if not in shadow add light contributtion to the color of the object
+				if (hit == false)
+					color += closestObj->GetDiffuseColor(*light, normal, l) + closestObj->GetSpecularColor(*light, normal, l, -1 * ray.direction);
+			}
+		}
+		//TODO: REMOVE NEXT LINE
+	
+		return color;
 		if (depth >= MAX_DEPTH) return color;
 		/*if (reflective object) {
 			rRay = calculate ray in the reflected direction;
@@ -300,6 +317,7 @@ void renderScene()
 		drawPoints();
 
 	printf("Terminou!\n");
+
 }
 
 void cleanup()
@@ -392,6 +410,7 @@ void init(int argc, char* argv[])
 
 int main(int argc, char* argv[])
 {
+	
 	scene = new Scene();
 	if (!(scene->LoadSceneNFF("jap.nff"))) return 0;
 	RES_X = scene->GetCamera().resolutionX;

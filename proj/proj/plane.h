@@ -20,7 +20,7 @@ public:
 		v1 = point1 - point2;
 		v2 = point3 - point2;
 
-		n = CrossProduct(v1, v2);
+		n = CrossProduct(v2, v1);
 		z = DotProduct(n, point1);
 
 		float magnitude = n.Magnitude();
@@ -31,5 +31,5 @@ public:
 	}
 
 	virtual bool object::CheckRayCollision(const ray &ray, float *distance, vec3 *hitpoint);
-	virtual vec3 ComputeNormal(const ray &ray, const vec3 &point);
+	virtual vec3 GetNormal(const ray &ray, const vec3 &point);
 };

@@ -34,6 +34,7 @@
     <ClCompile Include="camera.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="mat.cpp" />
+    <ClCompile Include="object.cpp" />
     <ClCompile Include="plane.cpp" />
     <ClCompile Include="scene.cpp" />
     <ClCompile Include="sphere.cpp" />

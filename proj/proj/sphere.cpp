@@ -26,13 +26,14 @@ bool sphere::CheckRayCollision(const ray &ray, float *distance, vec3 *hitpoint) 
 		t = b - sqrt(r);
 	else
 		t = b + sqrt(r);
-
-	*distance = t;
-	*hitpoint = origin + direction * t;
+	if (distance != nullptr)
+		*distance = t;
+	if (hitpoint != nullptr)
+		*hitpoint = origin + direction * t;
 	return true;
 	
 }
-vec3 sphere::ComputeNormal(const ray &ray, const vec3 &point) {
+vec3 sphere::GetNormal(const ray &ray, const vec3 &point) {
 	vec3 normal;
 
 	//square of the distance between ray origin and sphere centre

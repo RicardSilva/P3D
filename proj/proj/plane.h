@@ -21,7 +21,8 @@ public:
 		v2 = point3 - point2;
 
 		n = CrossProduct(v2, v1);
-		z = DotProduct(n, point1);
+		n.Clean();
+		z = -DotProduct(point1, n);
 
 		float magnitude = n.Magnitude();
 

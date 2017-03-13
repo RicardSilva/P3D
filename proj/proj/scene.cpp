@@ -138,6 +138,5 @@ void Scene::ParsePlane(std::stringstream& sin) {
 	sin >> point2.x >> point2.y >> point2.z;
 	sin >> point3.x >> point3.y >> point3.z;
 	plane *p = new plane(point1, point2, point3, this->mat);
-	std::cerr << "DISABLED: " << __FUNCTION__ << std::endl;
-	//objects.push_back(p);
+	objects.push_back(p);
 }

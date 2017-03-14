@@ -44,7 +44,7 @@ vec3 sphere::GetNormal(const ray &ray, const vec3 &point) {
 		normal = (point - centre) / radius;
 	//ray origin inside of sphere
 	else 
-		normal = (point - centre) / radius * -1;
+		normal = -1 * (point - centre) / radius;
 
 	return normal;
 }

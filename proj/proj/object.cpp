@@ -1,16 +1,16 @@
 #include "object.h"
 
 vec3 object::GetAmbientColor() {
-	return mat.color;
+	return mat.color * mat.Kd;
 }
 
 vec3 object::GetDiffuseColor(light &light, vec3 &normal, vec3 &l) {
 	vec3 color = vec3();
 	float dotProductNL = DotProduct(normal, l) * mat.Kd;
 	
-	color.x = light.color.x * dotProductNL;
-	color.y = light.color.y * dotProductNL;
-	color.z = light.color.z * dotProductNL;
+	color.x = light.color.x * mat.color.x * dotProductNL;
+	color.y = light.color.y * mat.color.y * dotProductNL;
+	color.z = light.color.z * mat.color.z * dotProductNL;
 	
 	return color;
 }

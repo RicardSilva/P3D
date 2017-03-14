@@ -52,19 +52,13 @@ int draw_mode = 2;
 
 int WindowHandle = 0;
 
-///////////////////////////////////////////////////////////////////////  RAY-TRACE SCENE
-vec3 colorCorrection(vec3 &color) {
-	float exposure = -0.4f;
-	color.x = 1.0f - expf(color.x * exposure);
-	color.y = 1.0f - expf(color.y * exposure);
-	color.z = 1.0f - expf(color.z * exposure);
-	return color;
-}
+///////////////////////////////////////////////////////////////////////  RAY-TRACE SCENE
+
+
 vec3 rayTracing(ray &ray, int depth, float RefrIndex)
 {
-	vec3 color;
+	vec3 color = vec3();
 
-	
 	bool hit = false;
 	float closestDistance = FLT_MAX;
 	vec3 closestHitpoint;
@@ -90,18 +84,14 @@ vec3 rayTracing(ray &ray, int depth, float RefrIndex)
 	else {
 		vec3 normal;
 		vec3 l;
-		//get object ambient color
-		color = closestObj->GetAmbientColor();
 		
-		//compute normal at the hit point;
-		normal = closestObj->GetNormal(ray, closestHitpoint);
+		normal = closestObj->GetNormal(ray, closestHitpoint); //compute normal at the hit point;
 		const std::vector<light*> lights = scene->GetLights();
 		struct ray shadowFiller;
 		for (auto &light : lights) {
-			//unit light vector from hit point to light source
-			l = light->ComputeL(closestHitpoint);
-			//offset the hitpoint to avoid self intersection
-			shadowFiller = struct ray(closestHitpoint + l * 0.0001f, l);
+			
+			l = light->ComputeL(closestHitpoint); //unit light vector from hit point to light source
+			shadowFiller = struct ray(closestHitpoint + l * 0.0001f, l); //offset the hitpoint to avoid self intersection
 			hit = false;
 			//trace shadow ray
 			if (DotProduct(normal, l) > 0) {
@@ -113,12 +103,13 @@ vec3 rayTracing(ray &ray, int depth, float RefrIndex)
 					}
 				}
 				//if not in shadow add light contributtion to the color of the object
-				if (hit == false)
-					color += closestObj->GetDiffuseColor(*light, normal, l) + closestObj->GetSpecularColor(*light, normal, l, -1 * ray.direction);
+				if (hit == false) {
+					color += closestObj->GetDiffuseColor(*light, normal, l);
+					color += closestObj->GetSpecularColor(*light, normal, l, -1 * ray.direction);
+				}
 			}
 		}
 		//TODO: REMOVE NEXT LINE
-		color = colorCorrection(color);
 		return color;
 		if (depth >= MAX_DEPTH) return color;
 		/*if (reflective object) {

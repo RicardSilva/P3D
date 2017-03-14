@@ -52,8 +52,14 @@ int draw_mode = 2;
 
 int WindowHandle = 0;
 
-///////////////////////////////////////////////////////////////////////  RAY-TRACE SCENE
-
+///////////////////////////////////////////////////////////////////////  RAY-TRACE SCENE
+vec3 colorCorrection(vec3 &color) {
+	float exposure = -0.4f;
+	color.x = 1.0f - expf(color.x * exposure);
+	color.y = 1.0f - expf(color.y * exposure);
+	color.z = 1.0f - expf(color.z * exposure);
+	return color;
+}
 vec3 rayTracing(ray &ray, int depth, float RefrIndex)
 {
 	vec3 color;
@@ -95,7 +101,7 @@ vec3 rayTracing(ray &ray, int depth, float RefrIndex)
 			//unit light vector from hit point to light source
 			l = light->ComputeL(closestHitpoint);
 			//offset the hitpoint to avoid self intersection
-			shadowFiller = struct ray(closestHitpoint + l * 0.0001, l);
+			shadowFiller = struct ray(closestHitpoint + l * 0.0001f, l);
 			hit = false;
 			//trace shadow ray
 			if (DotProduct(normal, l) > 0) {
@@ -112,7 +118,7 @@ vec3 rayTracing(ray &ray, int depth, float RefrIndex)
 			}
 		}
 		//TODO: REMOVE NEXT LINE
-	
+		color = colorCorrection(color);
 		return color;
 		if (depth >= MAX_DEPTH) return color;
 		/*if (reflective object) {

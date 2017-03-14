@@ -1,7 +1,7 @@
 #include "object.h"
 
 vec3 object::GetAmbientColor() {
-	return mat.color * mat.Kd;
+	return mat.color;
 }
 
 vec3 object::GetDiffuseColor(light &light, vec3 &normal, vec3 &l) {

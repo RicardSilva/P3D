@@ -17,10 +17,10 @@ public:
 		float z;
 		vec3 v1, v2;
 
-		v1 = point1 - point2;
-		v2 = point3 - point2;
+		v1 = point2 - point1;
+		v2 = point3 - point1;
 
-		n = CrossProduct(v2, v1);
+		n = CrossProduct(v1, v2);
 		n.Clean();
 		z = -DotProduct(point1, n);
 

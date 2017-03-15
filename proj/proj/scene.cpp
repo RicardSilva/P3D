@@ -66,10 +66,20 @@ bool Scene::LoadSceneNFF(std::string fileName) {
 		else if (keyword.compare("p") == 0) {
 			int total_vertices;
 			sin >> total_vertices;
+			std::vector<vec3> points;
+			vec3 point = vec3();
 			for (int i = 0; i < total_vertices; i++) {
+				
 				std::getline(ifile, line);
-				ParsePolygon(std::stringstream(line));
+				sin = std::stringstream(line);
+				sin >> point.x >> point.y >> point.z;
+				points.push_back(point);
 			}
+			if (points.size() == 3) {
+				triangle* t = new triangle(points, this->mat);
+				objects.push_back(t);
+			}
+			
 		}
 		else if (keyword.compare("pp") == 0)
 		{
@@ -123,9 +133,6 @@ void Scene::ParseSphere(std::stringstream& sin) {
 	sin >> centre.x >> centre.y >> centre.z >> radius;
 	sphere *s = new sphere(centre, radius, this->mat);
 	objects.push_back(s);
-}
-void Scene::ParsePolygon(std::stringstream& sin) {
-	std::cerr << "Not implemented: " << __FUNCTION__ << std::endl;
 }
 void Scene::ParsePolygonPatch(std::stringstream& sin) {
 	std::cerr << "Not implemented: " << __FUNCTION__ << std::endl;

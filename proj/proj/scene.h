@@ -5,6 +5,7 @@
 #include "object.h"
 #include "sphere.h"
 #include "plane.h"
+#include "triangle.h"
 #include <iostream>
 #include <sstream>
 #include <fstream>

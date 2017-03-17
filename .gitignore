@@ -1,6 +1,7 @@
 *.pdb
 proj/proj/bin/x64/Release/
 proj/proj/obj/x64/Debug/
+proj/proj/obj/x64/Release/
 proj/proj.opensdf
 *.log
 *.tlog

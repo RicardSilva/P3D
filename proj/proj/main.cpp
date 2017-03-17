@@ -46,6 +46,8 @@ GLint UniformId;
 
 Scene* scene = NULL;
 int RES_X, RES_Y;
+std::vector<object*> objs;
+std::vector<light*> lights;
 
 /* Draw Mode: 0 - point by point; 1 - line by line; 2 - full frame */
 int draw_mode = 2;
@@ -67,7 +69,7 @@ vec3 rayTracing(ray &ray, int depth, float RefrIndex)
 	float distance;
 	vec3 hitpoint;
 	
-	const std::vector<object*> objs = scene->GetObjects();
+	//const std::vector<object*> objs = scene->GetObjects();
 	//intersect ray with all objects and find a hit point(if any) closest to the start of the ray
 	for (auto &obj : objs) {
 		if (obj->CheckRayCollision(ray, &distance, &hitpoint) == true) {
@@ -86,7 +88,7 @@ vec3 rayTracing(ray &ray, int depth, float RefrIndex)
 		vec3 l;
 		
 		normal = closestObj->GetNormal(ray, closestHitpoint); //compute normal at the hit point;
-		const std::vector<light*> lights = scene->GetLights();
+		//const std::vector<light*> lights = scene->GetLights();
 		struct ray shadowFiller;
 		for (auto &light : lights) {
 			
@@ -409,9 +411,11 @@ int main(int argc, char* argv[])
 {
 	
 	scene = new Scene();
-	if (!(scene->LoadSceneNFF("scenes/mount_very_high.nff"))) return 0;
+	if (!(scene->LoadSceneNFF("scenes/balls_medium.nff"))) return 0;
 	RES_X = scene->GetCamera().resolutionX;
 	RES_Y = scene->GetCamera().resolutionY;
+	objs = scene->GetObjects();
+	lights = scene->GetLights();
 
 	if (draw_mode == 0) { // desenhar o conteúdo da janela ponto a ponto
 		size_vertices = 2 * sizeof(float);

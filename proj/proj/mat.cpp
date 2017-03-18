@@ -71,6 +71,7 @@ mat2 mat2::Inversed() {
 	}
 	else {
 		std::cerr << "Mat2 Inverse: determinant == 0" << std::endl;
+		throw;
 	}
 }
 
@@ -153,6 +154,7 @@ mat3 mat3::Inversed() {
 	}
 	else {
 		std::cerr << "Mat3 Inverse: determinant == 0" << std::endl;
+		throw;
 	}
 }
 

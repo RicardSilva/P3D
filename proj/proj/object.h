@@ -1,25 +1,34 @@
 #pragma once
 #include "material.h"
 #include "vec.h"
-#include "ray.h"
-#include "light.h"
+#include "Ray.h"
+#include "Light.h"
 #include <stdlib.h>
 
-class object {
+class Object {
 
 	material mat;
 
 public:
-	object() {}
-	object(const material &mat) : mat(mat) {}
+	Object() {}
+	Object(const material &mat) : mat(mat) {}
 
+	float GetReflectance() { return mat.shine; }
+	float GetTransmittance() { return mat.t; }
+	float GetRefractionIndex() { return mat.refraction_index; }
+	bool IsReflective() {
+		return mat.shine > 0;
+	}
+	bool IsTransmissive() {
+		return mat.t > 0;
+	}
 
-	vec3 GetAmbientColor();
-	vec3 GetDiffuseColor(light &light, vec3 &normal, vec3 &l);
-	vec3 GetSpecularColor(light &light, vec3 &normal, vec3 &l, vec3 &v);
+	vec3 GetDiffuseColor(Light &Light, vec3 &normal, vec3 &l);
+	vec3 GetSpecularColor(Light &Light, vec3 &normal, vec3 &l, vec3 &v);
+
 
 	//RETURNS FIRST HIT POINT IF IT EXISTS
-	virtual bool CheckRayCollision(const ray &ray, float *distance, vec3 *hitpoint) = 0;
-	virtual vec3 GetNormal(const ray &ray, const vec3 &point) = 0;
+	virtual bool CheckRayCollision(const Ray &Ray, float *distance, vec3 *hitpoint) = 0;
+	virtual vec3 GetNormal(const Ray &Ray, const vec3 &point) = 0;
 
 };

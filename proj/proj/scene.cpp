@@ -76,7 +76,7 @@ bool Scene::LoadSceneNFF(std::string fileName) {
 				points.push_back(point);
 			}
 			if (points.size() == 3) {
-				triangle* t = new triangle(points, this->mat);
+				Triangle* t = new Triangle(points, this->mat);
 				objects.push_back(t);
 			}
 			
@@ -109,7 +109,7 @@ void Scene::ParseLight(std::stringstream& sin) {
 		sin >> color.x >> color.y >> color.z;
 	else
 		color = vec3(1.0f, 1.0f, 1.0f);
-	light *l = new light(position, color);
+	Light *l = new Light(position, color);
 	lights.push_back(l);
 }
 void Scene::ParseMaterial(std::stringstream& sin) {
@@ -131,7 +131,7 @@ void Scene::ParseSphere(std::stringstream& sin) {
 	vec3 centre = vec3();
 	float radius;
 	sin >> centre.x >> centre.y >> centre.z >> radius;
-	sphere *s = new sphere(centre, radius, this->mat);
+	Sphere *s = new Sphere(centre, radius, this->mat);
 	objects.push_back(s);
 }
 void Scene::ParsePolygonPatch(std::stringstream& sin) {
@@ -144,6 +144,6 @@ void Scene::ParsePlane(std::stringstream& sin) {
 	sin >> point1.x >> point1.y >> point1.z;
 	sin >> point2.x >> point2.y >> point2.z;
 	sin >> point3.x >> point3.y >> point3.z;
-	plane *p = new plane(point1, point2, point3, this->mat);
+	Plane *p = new Plane(point1, point2, point3, this->mat);
 	objects.push_back(p);
 }

@@ -2,9 +2,9 @@
 //
 // P3D Course
 // (c) 2016 by João Madeiras Pereira
-// TEMPLATE: Whitted Ray Tracing NFF scenes and drawing points with Modern OpenGL
+// TEMPLATE: Whitted Ray Tracing NFF Scenes and drawing points with Modern OpenGL
 //
-//You should develop your rayTracing( Ray ray, int depth, float RefrIndex) which returns a color and
+//You should develop your RayTracing( Ray Ray, int depth, float RefrIndex) which returns a color and
 // to develop your load_NFF function
 //
 ///////////////////////////////////////////////////////////////////////
@@ -14,6 +14,7 @@
 #include <sstream>
 #include <string>
 #include <stdio.h>
+#include <chrono>
 
 #include <GL/glew.h>
 #include <GL/freeglut.h>
@@ -21,15 +22,16 @@
 #include "scene.h"
 #include "vec.h"
 #include "ray.h"
+#include "light.h"
 
-#define CAPTION "ray tracer"
+#define CAPTION "Ray tracer"
 
 #define VERTEX_COORD_ATTRIB 0
 #define COLOR_ATTRIB 1
 
 #define MAX_DEPTH 3
 
-// Points defined by 2 attributes: positions which are stored in vertices array and colors which are stored in colors array
+// Points defined by 2 attributes: positions which are stored in vertices arRay and colors which are stored in colors arRay
 float *colors;
 float *vertices;
 
@@ -46,32 +48,51 @@ GLint UniformId;
 
 Scene* scene = NULL;
 int RES_X, RES_Y;
-std::vector<object*> objs;
-std::vector<light*> lights;
+std::vector<Object*> objs;
+std::vector<Light*> lights;
+
+std::chrono::steady_clock::time_point begin;
+std::chrono::steady_clock::time_point end;
 
 /* Draw Mode: 0 - point by point; 1 - line by line; 2 - full frame */
 int draw_mode = 2;
 
 int WindowHandle = 0;
 
-///////////////////////////////////////////////////////////////////////  RAY-TRACE SCENE
+///////////////////////////////////////////////////////////////////////  Ray-TRACE Scene
+Ray* computeRefractionRay(Ray &incidingRay, vec3 &normal, vec3 &hitpoint, float incidingIndex, float refractedIndex) {
+	Ray refractionRay;
+	vec3 v = -1 * incidingRay.direction;
+	vec3 vt = DotProduct(v, normal) * normal - v;
+	float vtMagnitude = vt.Magnitude();
+	float sinT = (incidingIndex / refractedIndex) * vtMagnitude;
+	
+	if (sinT >= 1)
+		return nullptr; // Total internal reflection ocurred!
+	float cosT = sqrt(1 - sinT * sinT);
 
+	vec3 t = 1 / vtMagnitude * vt;
+	vec3 r = sinT * t + cosT * (-1 * normal);
 
-vec3 rayTracing(ray &ray, int depth, float RefrIndex)
+	refractionRay = Ray(hitpoint + 0.0001f * r, r);
+	return &refractionRay;
+}
+
+vec3 trace(Ray &ray, int depth)
 {
 	vec3 color = vec3();
 
 	bool hit = false;
 	float closestDistance = FLT_MAX;
 	vec3 closestHitpoint;
-	object* closestObj = nullptr;
+	Object* closestObj = nullptr;
 
 	float distance;
 	vec3 hitpoint;
 	
-	//const std::vector<object*> objs = scene->GetObjects();
-	//intersect ray with all objects and find a hit point(if any) closest to the start of the ray
-	for (auto &obj : objs) {
+	
+	//intersect Ray with all Objects and find a hit point(if any) closest to the start of the Ray
+	for (auto obj : objs) {
 		if (obj->CheckRayCollision(ray, &distance, &hitpoint) == true) {
 			hit = true;
 			if (distance < closestDistance) {
@@ -86,44 +107,48 @@ vec3 rayTracing(ray &ray, int depth, float RefrIndex)
 	else {
 		vec3 normal;
 		vec3 l;
-		
+		struct Ray shadowFiller;
+
 		normal = closestObj->GetNormal(ray, closestHitpoint); //compute normal at the hit point;
-		//const std::vector<light*> lights = scene->GetLights();
-		struct ray shadowFiller;
-		for (auto &light : lights) {
+		
+		for (auto light : lights) {
 			
-			l = light->ComputeL(closestHitpoint); //unit light vector from hit point to light source
-			shadowFiller = struct ray(closestHitpoint + l * 0.0001f, l); //offset the hitpoint to avoid self intersection
+			l = light->ComputeL(closestHitpoint); //unit Light vector from hit point to Light source
+			shadowFiller = Ray(closestHitpoint + l * 0.0001f, l); //offset the hitpoint to avoid self intersection
 			hit = false;
-			//trace shadow ray
+			//trace shadow Ray
 			if (DotProduct(normal, l) > 0) {
-				for (auto &obj : objs) {
-					//check if object is in shadow by checking if light ray collides with any object
+				for (auto obj : objs) {
+					//check if Object is in shadow by checking if Light Ray collides with any Object
 					if (obj->CheckRayCollision(shadowFiller, nullptr, nullptr) == true) {
 						hit = true;
 						break;
 					}
 				}
-				//if not in shadow add light contributtion to the color of the object
+				//if not in shadow add Light contributtion to the color of the Object
 				if (hit == false) {
-					color += closestObj->GetDiffuseColor(*light, normal, l);
-					color += closestObj->GetSpecularColor(*light, normal, l, -1 * ray.direction);
+					color += closestObj->GetDiffuseColor(*light, normal, l)
+					      + closestObj->GetSpecularColor(*light, normal, l, -1 * ray.direction);
 				}
 			}
 		}
 		//TODO: REMOVE NEXT LINE
-		return color;
+		//return color;
 		if (depth >= MAX_DEPTH) return color;
-		/*if (reflective object) {
-			rRay = calculate ray in the reflected direction;
-			rColor = trace(scene, point, rRay direction, depth + 1);
+		/*if (reflective Object) {
+			rRay = calculate Ray in the reflected direction;
+			rColor = trace(Scene, point, rRay direction, depth + 1);
 			reduce rColor by the specular reflection coefficient and add to color;
-		}
-		if (translucid object) {
-			tRay = calculate ray in the refracted direction;
-			tColor = trace(scene, point, tRay direction, depth + 1);
-			reduce tColor by the transmittance coefficient and add to color;
 		}*/
+		if (closestObj->IsTransmissive()) {
+			
+			Ray* tRay = computeRefractionRay(ray, normal, hitpoint, 1, closestObj->GetRefractionIndex());
+			if (tRay != nullptr) {
+				vec3 tColor = trace(*tRay, depth + 1);
+				//reduce tColor by the transmittance coefficient and add to color;
+				color += tColor * closestObj->GetTransmittance();
+			}
+		}
 
 	}
 	return color;
@@ -244,6 +269,7 @@ void createBufferObjects()
 
 void destroyBufferObjects()
 {
+	glBindVertexArray(VaoId);
 	glDisableVertexAttribArray(VERTEX_COORD_ATTRIB);
 	glDisableVertexAttribArray(COLOR_ATTRIB);
 
@@ -273,12 +299,12 @@ void drawPoints()
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-	checkOpenGLError("ERROR: Could not draw scene.");
+	checkOpenGLError("ERROR: Could not draw Scene.");
 }
 
 /////////////////////////////////////////////////////////////////////// CALLBACKS
 
-// Render function by primary ray casting from the eye towards the scene's objects
+// Render function by primary Ray casting from the eye towards the Scene's Objects
 
 void renderScene()
 {
@@ -289,8 +315,8 @@ void renderScene()
 	{
 		for (int x = 0; x < RES_X; x++)
 		{
-			ray ray = scene->GetCamera().getPrimaryRay(x, y);
-			vec3 color = rayTracing(ray, 1, 1.0);
+			Ray ray = scene->GetCamera().getPrimaryRay(x, y);
+			vec3 color = trace(ray, 1);
 
 			vertices[index_pos++] = (float)x;
 			vertices[index_pos++] = (float)y;
@@ -315,7 +341,12 @@ void renderScene()
 	if (draw_mode == 2) //preenchar o conteúdo da janela com uma imagem completa
 		drawPoints();
 
+	end = std::chrono::steady_clock::now();
+	std::cout << std::endl << "Time difference = " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << std::endl;
 	printf("Terminou!\n");
+
+
+
 
 }
 
@@ -353,12 +384,21 @@ void reshape(int w, int h)
 	ortho(0, (float)RES_X, 0, (float)RES_Y, -1.0, 1.0);
 }
 
+void OnKeydown(unsigned char key, int x, int y) {
+	key = tolower(key);
+
+	if (key == 27) {
+		glutLeaveMainLoop();
+	}
+	else if (key == 't') {}
+}
 /////////////////////////////////////////////////////////////////////// SETUP
 void setupCallbacks()
 {
 	glutCloseFunc(cleanup);
 	glutDisplayFunc(renderScene);
 	glutReshapeFunc(reshape);
+	glutKeyboardFunc(OnKeydown);
 }
 
 void setupGLEW() {
@@ -409,9 +449,9 @@ void init(int argc, char* argv[])
 
 int main(int argc, char* argv[])
 {
-	
+	begin = std::chrono::steady_clock::now();
 	scene = new Scene();
-	if (!(scene->LoadSceneNFF("scenes/balls_medium.nff"))) return 0;
+	if (!(scene->LoadSceneNFF("Scenes/mount_high.nff"))) return 0;
 	RES_X = scene->GetCamera().resolutionX;
 	RES_Y = scene->GetCamera().resolutionY;
 	objs = scene->GetObjects();

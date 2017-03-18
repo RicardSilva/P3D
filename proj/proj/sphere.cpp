@@ -1,11 +1,11 @@
 #include "sphere.h"
 
-bool sphere::CheckRayCollision(const ray &ray, float *distance, vec3 *hitpoint) {
-	const vec3 origin = ray.origin;
-	const vec3 direction = ray.direction;
+bool Sphere::CheckRayCollision(const Ray &Ray, float *distance, vec3 *hitpoint) {
+	const vec3 origin = Ray.origin;
+	const vec3 direction = Ray.direction;
 	const float radiusSqr = radius * radius;
 
-	//square of the distance between ray origin and sphere centre
+	//square of the distance between Ray origin and Sphere centre
 	float d = (centre - origin).sqrMagnitude();
 	if (d == radiusSqr)
 		return false;
@@ -33,16 +33,16 @@ bool sphere::CheckRayCollision(const ray &ray, float *distance, vec3 *hitpoint) 
 	return true;
 	
 }
-vec3 sphere::GetNormal(const ray &ray, const vec3 &point) {
+vec3 Sphere::GetNormal(const Ray &Ray, const vec3 &point) {
 	vec3 normal;
 
-	//square of the distance between ray origin and sphere centre
-	float d = (centre - ray.origin).sqrMagnitude();
+	//square of the distance between Ray origin and Sphere centre
+	float d = (centre - Ray.origin).sqrMagnitude();
 	
-	//ray origin outside of sphere
+	//Ray origin outside of Sphere
 	if(d >= radius * radius)
 		normal = (point - centre) / radius;
-	//ray origin inside of sphere
+	//Ray origin inside of Sphere
 	else 
 		normal = -1 * (point - centre) / radius;
 

@@ -1,11 +1,11 @@
 #pragma once
 #include "vec.h"
 
-struct ray {
+struct Ray {
 
 	vec3 origin;
 	vec3 direction;
 
-	ray() : origin(vec3()), direction(vec3()) {}
-	ray(vec3 &origin, vec3 &direction) : origin(origin), direction(direction) {}
+	Ray() : origin(vec3()), direction(vec3()) {}
+	Ray(vec3 &origin, vec3 &direction) : origin(origin), direction(direction) {}
 };

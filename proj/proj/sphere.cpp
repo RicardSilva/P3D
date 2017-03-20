@@ -1,47 +1,11 @@
 #include "sphere.h"
 
-float Sphere::GetEnterRefractionIndex(const Ray &ray) {
-	float index;
-
-	//square of the distance between Ray origin and Sphere centre
-	float d = (centre - ray.origin).sqrMagnitude();
-
-	//Ray origin outside of Sphere
-	if (d >= radius * radius)
-		index = mat.refraction_index;
-	//Ray origin inside of Sphere
-	else
-		index = 1.0f;
-
-
-	return index;
-	//return 1.0f;
-
-}
-float Sphere::GetExitRefractionIndex(const Ray &ray) {
-	float index;
-
-	//square of the distance between Ray origin and Sphere centre
-	float d = (centre - ray.origin).sqrMagnitude();
-
-	//Ray origin outside of Sphere
-	if (d >= radius * radius)
-		index = mat.refraction_index;
-	//Ray origin inside of Sphere
-	else
-		index = 1.0f;
-
-
-	return index;
-	//return 1.0f;
-
-}
-bool Sphere::CheckRayCollision(const Ray &ray, float *distance, vec3 *hitpoint) {
+bool sphere::CheckRayCollision(const ray &ray, float *distance, vec3 *hitpoint) {
 	const vec3 origin = ray.origin;
 	const vec3 direction = ray.direction;
 	const float radiusSqr = radius * radius;
 
-	//square of the distance between Ray origin and Sphere centre
+	//square of the distance between ray origin and sphere centre
 	float d = (centre - origin).sqrMagnitude();
 	if (d == radiusSqr)
 		return false;
@@ -69,18 +33,18 @@ bool Sphere::CheckRayCollision(const Ray &ray, float *distance, vec3 *hitpoint) 
 	return true;
 	
 }
-vec3 Sphere::GetNormal(const Ray &ray, const vec3 &point) {
+vec3 sphere::GetNormal(const ray &ray, const vec3 &point) {
 	vec3 normal;
 
-	//square of the distance between Ray origin and Sphere centre
+	//square of the distance between ray origin and sphere centre
 	float d = (centre - ray.origin).sqrMagnitude();
 	
-	//Ray origin outside of Sphere
-	if(d > radius * radius)
+	//ray origin outside of sphere
+	if(d >= radius * radius)
 		normal = (point - centre) / radius;
-	//Ray origin inside of Sphere
+	//ray origin inside of sphere
 	else 
-		normal = (centre - point) / radius;
+		normal = -1 * (point - centre) / radius;
 
 	return normal;
 }

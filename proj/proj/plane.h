@@ -1,17 +1,17 @@
 #pragma once
 #include "vec.h"
-#include "Object.h"
-#include "Ray.h"
+#include "object.h"
+#include "ray.h"
 
-class Plane : public Object {
+class plane : public object {
 
 	vec3 normal;
 	float d;
 
 public:
-	Plane() {}
-	Plane(const vec3 &point1, const vec3 &point2, const vec3 &point3, const material &mat) 
-		: Object(mat) {
+	plane() {}
+	plane(const vec3 &point1, const vec3 &point2, const vec3 &point3, const material &mat) 
+		: object(mat) {
 
 		vec3 n;
 		float z;
@@ -26,12 +26,11 @@ public:
 
 		float magnitude = n.Magnitude();
 
-		this->normal = n / magnitude;
-		this->d = z / magnitude;
+		normal = n / magnitude;
+		d = z / magnitude;
 
 	}
 
-	
-	bool Object::CheckRayCollision(const Ray &Ray, float *distance, vec3 *hitpoint);
-	vec3 GetNormal(const Ray &Ray, const vec3 &point);
+	virtual bool object::CheckRayCollision(const ray &ray, float *distance, vec3 *hitpoint);
+	virtual vec3 GetNormal(const ray &ray, const vec3 &point);
 };

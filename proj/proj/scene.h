@@ -18,8 +18,8 @@ private:
 	vec3 backgroundColor;
 	camera cam;
 	material mat;
-	std::vector <Light*> lights;
-	std::vector <Object*> objects;
+	std::vector <light*> lights;
+	std::vector <object*> objects;
 
 
 public:
@@ -54,10 +54,10 @@ public:
 	vec3 GetBackgroundColor() {
 		return backgroundColor;
 	}
-	const std::vector<Object*> GetObjects() {
+	const std::vector<object*> GetObjects() {
 		return objects;
 	}
-	const std::vector<Light*> GetLights() {
+	const std::vector<light*> GetLights() {
 		return lights;
 	}
 };

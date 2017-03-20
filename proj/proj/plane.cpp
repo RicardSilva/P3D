@@ -1,16 +1,16 @@
-#include "Plane.h"
+#include "plane.h" 
 
-bool Plane::CheckRayCollision(const Ray &Ray, float *distance, vec3 *hitpoint) {
-	vec3 origin = Ray.origin;
-	vec3 direction = Ray.direction;
+bool plane::CheckRayCollision(const ray &ray, float *distance, vec3 *hitpoint) {
+	vec3 origin = ray.origin;
+	vec3 direction = ray.direction;
 	float t;
 	float dotProductNormalDirection = DotProduct(normal, direction);
-	//Plane and Ray are parallel
+	//plane and ray are parallel
 	if (dotProductNormalDirection == 0)
 		return false;
 	t = -1 * ((DotProduct(normal, origin) + d) / dotProductNormalDirection);
 	
-	//collision is behind Ray origin
+	//collision is behind ray origin
 	if (t < 0)
 		return false;
 	if (distance != nullptr)
@@ -20,6 +20,6 @@ bool Plane::CheckRayCollision(const Ray &Ray, float *distance, vec3 *hitpoint) {
 	return true;
 
 }
-vec3 Plane::GetNormal(const Ray &Ray, const vec3 &point) {
+vec3 plane::GetNormal(const ray &ray, const vec3 &point) {
 	return normal;
 }

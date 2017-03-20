@@ -2,7 +2,7 @@
 
 #include "vec.h"
 #include "mat.h"
-#include "Ray.h"
+#include "ray.h"
 
 struct camera {
 	
@@ -37,7 +37,7 @@ public:
 
 	}
 
-	Ray getPrimaryRay(int x, int y);
+	ray getPrimaryRay(int x, int y);
 
 };
 

@@ -56,29 +56,40 @@ std::chrono::steady_clock::time_point end;
 
 /* Draw Mode: 0 - point by point; 1 - line by line; 2 - full frame */
 int draw_mode = 2;
+bool reflectionsEnabled = false;
+bool refractionsEnabled = true;
 
 int WindowHandle = 0;
 
 ///////////////////////////////////////////////////////////////////////  Ray-TRACE Scene
+Ray* computeReflectionRay(Ray &incidingRay, vec3 &normal, vec3 &hitpoint) {
+	Ray* reflectionRay;
+	vec3 i = incidingRay.direction;
+	vec3 r = i - (2 * DotProduct(i, normal) * normal);
+
+	reflectionRay = new Ray(hitpoint + 0.01f * r, r);
+	return reflectionRay;
+}
 Ray* computeRefractionRay(Ray &incidingRay, vec3 &normal, vec3 &hitpoint, float incidingIndex, float refractedIndex) {
-	Ray refractionRay;
+	Ray* refractionRay;
 	vec3 v = -1 * incidingRay.direction;
 	vec3 vt = DotProduct(v, normal) * normal - v;
 	float vtMagnitude = vt.Magnitude();
 	float sinT = (incidingIndex / refractedIndex) * vtMagnitude;
 	
-	if (sinT >= 1)
-		return nullptr; // Total internal reflection ocurred!
+	//if (sinT >= 1)
+		//return nullptr; // Total internal reflection ocurred!
 	float cosT = sqrt(1 - sinT * sinT);
 
 	vec3 t = 1 / vtMagnitude * vt;
 	vec3 r = sinT * t + cosT * (-1 * normal);
-
-	refractionRay = Ray(hitpoint + 0.0001f * r, r);
-	return &refractionRay;
+	r.Normalize();
+	
+	refractionRay = new Ray(hitpoint + 0.1f * r,  r);
+	return refractionRay;
 }
 
-vec3 trace(Ray &ray, int depth)
+vec3 trace(Ray &ray, int depth, float incidingIndex)
 {
 	vec3 color = vec3();
 
@@ -94,8 +105,9 @@ vec3 trace(Ray &ray, int depth)
 	//intersect Ray with all Objects and find a hit point(if any) closest to the start of the Ray
 	for (auto obj : objs) {
 		if (obj->CheckRayCollision(ray, &distance, &hitpoint) == true) {
-			hit = true;
+			
 			if (distance < closestDistance) {
+				hit = true;
 				closestDistance = distance;
 				closestObj = obj;
 				closestHitpoint = hitpoint;
@@ -114,7 +126,7 @@ vec3 trace(Ray &ray, int depth)
 		for (auto light : lights) {
 			
 			l = light->ComputeL(closestHitpoint); //unit Light vector from hit point to Light source
-			shadowFiller = Ray(closestHitpoint + l * 0.0001f, l); //offset the hitpoint to avoid self intersection
+			shadowFiller = Ray(closestHitpoint + l * 0.001f, l); //offset the hitpoint to avoid self intersection
 			hit = false;
 			//trace shadow Ray
 			if (DotProduct(normal, l) > 0) {
@@ -132,19 +144,20 @@ vec3 trace(Ray &ray, int depth)
 				}
 			}
 		}
-		//TODO: REMOVE NEXT LINE
-		//return color;
+	
 		if (depth >= MAX_DEPTH) return color;
-		/*if (reflective Object) {
-			rRay = calculate Ray in the reflected direction;
-			rColor = trace(Scene, point, rRay direction, depth + 1);
-			reduce rColor by the specular reflection coefficient and add to color;
-		}*/
-		if (closestObj->IsTransmissive()) {
-			
-			Ray* tRay = computeRefractionRay(ray, normal, hitpoint, 1, closestObj->GetRefractionIndex());
+		if (reflectionsEnabled && closestObj->IsReflective()) {
+			Ray* rRay = computeReflectionRay(ray, normal, hitpoint);
+			vec3 rColor = trace(*rRay, depth + 1, incidingIndex);
+			delete rRay;
+			//reduce rColor by the specular reflection coefficient and add to color;
+			color += rColor * closestObj->GetReflectance();
+		}
+		if (refractionsEnabled && closestObj->IsTransmissive()) {
+			Ray* tRay = computeRefractionRay(ray, normal, hitpoint, incidingIndex, closestObj->GetEnterRefractionIndex(ray));
 			if (tRay != nullptr) {
-				vec3 tColor = trace(*tRay, depth + 1);
+				vec3 tColor = trace(*tRay, depth + 1, closestObj->GetExitRefractionIndex(ray));
+				delete tRay;
 				//reduce tColor by the transmittance coefficient and add to color;
 				color += tColor * closestObj->GetTransmittance();
 			}
@@ -316,7 +329,7 @@ void renderScene()
 		for (int x = 0; x < RES_X; x++)
 		{
 			Ray ray = scene->GetCamera().getPrimaryRay(x, y);
-			vec3 color = trace(ray, 1);
+			vec3 color = trace(ray, 1, 1.0f);
 
 			vertices[index_pos++] = (float)x;
 			vertices[index_pos++] = (float)y;
@@ -451,7 +464,7 @@ int main(int argc, char* argv[])
 {
 	begin = std::chrono::steady_clock::now();
 	scene = new Scene();
-	if (!(scene->LoadSceneNFF("Scenes/mount_high.nff"))) return 0;
+	if (!(scene->LoadSceneNFF("Scenes/mount_low.nff"))) return 0;
 	RES_X = scene->GetCamera().resolutionX;
 	RES_Y = scene->GetCamera().resolutionY;
 	objs = scene->GetObjects();

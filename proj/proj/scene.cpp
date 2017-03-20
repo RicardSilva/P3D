@@ -19,8 +19,8 @@ bool Scene::LoadSceneNFF(std::string fileName) {
 			vec3 eye = vec3();
 			vec3 at = vec3();
 			vec3 up = vec3();
-			float fovy;
-			float near;
+			double fovy;
+			double near;
 			int resX, resY;
 			std::string junk;
 		
@@ -114,7 +114,7 @@ void Scene::ParseLight(std::stringstream& sin) {
 }
 void Scene::ParseMaterial(std::stringstream& sin) {
 	vec3 color = vec3();
-	float Kd, Ks, shine, t, refraction_index;
+	double Kd, Ks, shine, t, refraction_index;
 	sin >> color.x >> color.y >> color.z >> Kd >> Ks >> shine >> t >> refraction_index;
 	this->mat = material(color, Kd, Ks, shine, t, refraction_index);
 }
@@ -129,7 +129,7 @@ void Scene::ParseCylinderApex(std::stringstream& sin) {
 }
 void Scene::ParseSphere(std::stringstream& sin) {
 	vec3 centre = vec3();
-	float radius;
+	double radius;
 	sin >> centre.x >> centre.y >> centre.z >> radius;
 	Sphere *s = new Sphere(centre, radius, this->mat);
 	objects.push_back(s);

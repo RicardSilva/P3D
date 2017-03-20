@@ -31,6 +31,7 @@ public:
 
 	}
 
-	virtual bool Object::CheckRayCollision(const Ray &Ray, float *distance, vec3 *hitpoint);
-	virtual vec3 GetNormal(const Ray &Ray, const vec3 &point);
+	
+	bool Object::CheckRayCollision(const Ray &Ray, float *distance, vec3 *hitpoint);
+	vec3 GetNormal(const Ray &Ray, const vec3 &point);
 };

@@ -12,6 +12,9 @@ public:
 	Sphere() {}
 	Sphere(const vec3 &centre, float radius, const material &mat) : Object(mat), centre(centre), radius(radius) {}
 
-	virtual bool CheckRayCollision(const Ray &Ray, float *distance, vec3 *hitpoint);
-	virtual vec3 GetNormal(const Ray &Ray, const vec3 &point);
+
+	float GetEnterRefractionIndex(const Ray &Ray);
+	float GetExitRefractionIndex(const Ray &Ray);
+	bool CheckRayCollision(const Ray &ray, float *distance, vec3 *hitpoint);
+	vec3 GetNormal(const Ray &ray, const vec3 &point);
 };

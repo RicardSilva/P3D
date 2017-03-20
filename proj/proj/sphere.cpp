@@ -1,8 +1,44 @@
 #include "sphere.h"
 
-bool Sphere::CheckRayCollision(const Ray &Ray, float *distance, vec3 *hitpoint) {
-	const vec3 origin = Ray.origin;
-	const vec3 direction = Ray.direction;
+float Sphere::GetEnterRefractionIndex(const Ray &ray) {
+	float index;
+
+	//square of the distance between Ray origin and Sphere centre
+	float d = (centre - ray.origin).sqrMagnitude();
+
+	//Ray origin outside of Sphere
+	if (d >= radius * radius)
+		index = mat.refraction_index;
+	//Ray origin inside of Sphere
+	else
+		index = 1.0f;
+
+
+	return index;
+	//return 1.0f;
+
+}
+float Sphere::GetExitRefractionIndex(const Ray &ray) {
+	float index;
+
+	//square of the distance between Ray origin and Sphere centre
+	float d = (centre - ray.origin).sqrMagnitude();
+
+	//Ray origin outside of Sphere
+	if (d >= radius * radius)
+		index = mat.refraction_index;
+	//Ray origin inside of Sphere
+	else
+		index = 1.0f;
+
+
+	return index;
+	//return 1.0f;
+
+}
+bool Sphere::CheckRayCollision(const Ray &ray, float *distance, vec3 *hitpoint) {
+	const vec3 origin = ray.origin;
+	const vec3 direction = ray.direction;
 	const float radiusSqr = radius * radius;
 
 	//square of the distance between Ray origin and Sphere centre
@@ -33,18 +69,18 @@ bool Sphere::CheckRayCollision(const Ray &Ray, float *distance, vec3 *hitpoint) 
 	return true;
 	
 }
-vec3 Sphere::GetNormal(const Ray &Ray, const vec3 &point) {
+vec3 Sphere::GetNormal(const Ray &ray, const vec3 &point) {
 	vec3 normal;
 
 	//square of the distance between Ray origin and Sphere centre
-	float d = (centre - Ray.origin).sqrMagnitude();
+	float d = (centre - ray.origin).sqrMagnitude();
 	
 	//Ray origin outside of Sphere
-	if(d >= radius * radius)
+	if(d > radius * radius)
 		normal = (point - centre) / radius;
 	//Ray origin inside of Sphere
 	else 
-		normal = -1 * (point - centre) / radius;
+		normal = (centre - point) / radius;
 
 	return normal;
 }

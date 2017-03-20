@@ -1,21 +1,22 @@
 #include "Triangle.h"
 
-#define EPSILON 0.000001
+#define EPSILON 0.000001f
 
-bool Triangle::CheckRayCollision(const Ray &Ray, float *distance, vec3 *hitpoint) {
-	const vec3 origin = Ray.origin;
-	const vec3 direction = Ray.direction;
+
+bool Triangle::CheckRayCollision(const Ray &ray, float *distance, vec3 *hitpoint) {
+	const vec3 origin = ray.origin;
+	const vec3 direction = ray.direction;
 	
 	vec3 pvec = CrossProduct(direction, v2);
 	float det = DotProduct(v1, pvec);
 
 
 	// if the determinant is close to 0, the Ray misses the Triangle
-	if (det < EPSILON) return false;
+	if (det < EPSILON && det > -EPSILON) return false;
 
 	float invDet = 1 / det;
 
-	vec3 tvec = origin - point1;
+	vec3 tvec = origin - vertice1;
 	float u = DotProduct(tvec, pvec) * invDet;
 	if (u < 0 || u > 1) 
 		return false;

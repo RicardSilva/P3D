@@ -1,8 +1,12 @@
 *.pdb
-proj/proj/bin/x64/Release/
+proj/proj/bin/
 proj/proj/obj/x64/Debug/
 proj/proj/obj/x64/Release/
 proj/proj.opensdf
+proj/packages/
+proj/.vs/proj/
+proj/*db
 *.log
 *.tlog
 *.opendb
+

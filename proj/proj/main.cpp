@@ -29,6 +29,7 @@
 
 #define VERTEX_COORD_ATTRIB 0
 #define COLOR_ATTRIB 1
+#define ANTI_ALISING_NUMBER 5
 
 #define MAX_DEPTH 3
 
@@ -329,8 +330,17 @@ void renderScene()
 	{
 		for (int x = 0; x < RES_X; x++)
 		{
+			
+			vec3 color = vec3();
+			for (int r = 0; r < ANTI_ALISING_NUMBER; r++)
+			{
+				ray ray = scene->GetCamera().getRandomPrimaryRay(x, y);
+				color += rayTracing(ray, 1, 1.0);
+			}
 			ray ray = scene->GetCamera().getPrimaryRay(x, y);
-			vec3 color = rayTracing(ray, 1, 1.0);
+			
+			color += rayTracing(ray, 1, 1.0);
+			color /= ANTI_ALISING_NUMBER+1;
 
 			vertices[index_pos++] = (float)x;
 			vertices[index_pos++] = (float)y;
@@ -451,7 +461,7 @@ int main(int argc, char* argv[])
 {
 	
 	scene = new Scene();
-	if (!(scene->LoadSceneNFF("scenes/mount_low.nff"))) return 0;
+	if (!(scene->LoadSceneNFF("scenes/balls_low.nff"))) return 0;
 	RES_X = scene->GetCamera().resolutionX;
 	RES_Y = scene->GetCamera().resolutionY;
 

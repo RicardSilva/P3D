@@ -4,6 +4,10 @@
 #include "mat.h"
 #include "ray.h"
 
+#include <cstdlib>
+#include <ctime>
+#include <iostream>
+
 struct camera {
 	
 	vec3 eye;
@@ -25,6 +29,7 @@ public:
 	camera(vec3 eye, vec3 at, vec3 up, float fovy, float near, float far, int resX, int resY) 
 		: eye(eye), at(at), up(up), fovy(fovy), nearp(near), farp(far), resolutionX(resX), resolutionY(resY)
 	{
+		srand(time(NULL));
 		df = (eye - at).Magnitude();
 
 		h = 2 * df * tan(fovy / 2);
@@ -38,6 +43,6 @@ public:
 	}
 
 	ray getPrimaryRay(int x, int y);
-
+	ray getRandomPrimaryRay(int x, int y); //creates a 
 };
 

@@ -8,4 +8,7 @@ struct Ray {
 
 	Ray() : origin(vec3()), direction(vec3()) {}
 	Ray(vec3 &origin, vec3 &direction) : origin(origin), direction(direction) {}
+	bool IsNull() {
+		return origin == vec3() && direction == vec3();
+	}
 };

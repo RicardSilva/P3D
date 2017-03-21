@@ -9,14 +9,13 @@
 //
 ///////////////////////////////////////////////////////////////////////
 
-//refrationDirection sa
-//https://www.gamedev.net/topic/486265-raytracing---refraction-algorithm/
 
 #include <stdlib.h>
 #include <iostream>
 #include <sstream>
 #include <string>
 #include <stdio.h>
+#include <chrono>
 
 #include <GL/glew.h>
 #include <GL/freeglut.h>
@@ -32,6 +31,9 @@
 #define ANTI_ALISING_NUMBER 5
 
 #define MAX_DEPTH 3
+/* Draw Mode: 0 - point by point; 1 - line by line; 2 - full frame */
+int draw_mode = 2;
+bool antiAliasingEnabled = true;
 
 // Points defined by 2 attributes: positions which are stored in vertices array and colors which are stored in colors array
 float *colors;
@@ -51,9 +53,8 @@ GLint UniformId;
 Scene* scene = NULL;
 int RES_X, RES_Y;
 
-/* Draw Mode: 0 - point by point; 1 - line by line; 2 - full frame */
-int draw_mode = 2;
-bool antiAliasingEnabled = false;
+std::chrono::steady_clock::time_point begin;
+std::chrono::steady_clock::time_point end;
 
 int WindowHandle = 0;
 
@@ -79,6 +80,9 @@ Ray computeRefractionRay(Ray &ray, vec3 &normal, vec3 &hitpoint, float incidingI
 		refractedDirection.Normalize();
 
 		return Ray(hitpoint + refractedDirection * 0.00001f, refractedDirection);
+	}
+	else {
+		return Ray();
 	}
 }
 vec3 rayTracing(Ray &ray, int depth, float RefrIndex)
@@ -140,14 +144,16 @@ vec3 rayTracing(Ray &ray, int depth, float RefrIndex)
 		
 		if (closestObj->isReflective()) {
 			Ray reflectiveRay = computeReflectionRay(ray, normal, closestHitpoint);
-			vec3 rColor = rayTracing(reflectiveRay, depth + 1 , closestObj->mat.refraction_index);
+			vec3 rColor = rayTracing(reflectiveRay, depth + 1 , closestObj->GetExitRefractionIndex(ray));
 			color += rColor * closestObj->GetReflectance();
 		}
 		
 		if (closestObj->isTransmissive()) {
 			Ray refractedRay = computeRefractionRay(ray, normal, closestHitpoint, RefrIndex, closestObj->GetEnterRefractionIndex(ray));
-			vec3 tColor = rayTracing(refractedRay, depth + 1, closestObj->GetExitRefractionIndex(ray));
-			color += tColor * closestObj->GetTransmittance();
+			if (!refractedRay.IsNull()) {
+				vec3 tColor = rayTracing(refractedRay, depth + 1, closestObj->GetExitRefractionIndex(ray));
+				color += tColor * closestObj->GetTransmittance();
+			}
 	
 		}
 		
@@ -310,7 +316,7 @@ void renderScene()
 {
 	int index_pos = 0;
 	int index_col = 0;
-
+	begin = std::chrono::steady_clock::now();
 	for (int y = 0; y < RES_Y; y++)
 	{
 		for (int x = 0; x < RES_X; x++)
@@ -353,6 +359,8 @@ void renderScene()
 	if (draw_mode == 2) //preenchar o conteúdo da janela com uma imagem completa
 		drawPoints();
 
+	end = std::chrono::steady_clock::now();
+	std::cout << std::endl << "Time difference = " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << std::endl;
 	printf("Terminou!\n");
 
 }
@@ -449,7 +457,7 @@ int main(int argc, char* argv[])
 {
 	
 	scene = new Scene();
-	if (!(scene->LoadSceneNFF("scenes/mount_very_high.nff"))) return 0;
+	if (!(scene->LoadSceneNFF("scenes/balls_high.nff"))) return 0;
 	RES_X = scene->GetCamera().resolutionX;
 	RES_Y = scene->GetCamera().resolutionY;
 

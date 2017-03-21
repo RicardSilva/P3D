@@ -4,14 +4,16 @@
 #include "object.h"
 #include "ray.h"
 
-class sphere : public object {
+class Sphere : public Object {
 	vec3 centre;
 	float radius;
 
 public:
-	sphere() {}
-	sphere(const vec3 &centre, float radius, const material &mat) : object(mat), centre(centre), radius(radius) {}
+	Sphere() {}
+	Sphere(const vec3 &centre, float radius, const material &mat) : Object(mat), centre(centre), radius(radius) {}
 
-	virtual bool CheckRayCollision(const ray &ray, float *distance, vec3 *hitpoint);
-	virtual vec3 GetNormal(const ray &ray, const vec3 &point);
+	float GetEnterRefractionIndex(const Ray &ray);
+	float GetExitRefractionIndex(const Ray &ray);
+	virtual bool CheckRayCollision(const Ray &ray, float *distance, vec3 *hitpoint);
+	virtual vec3 GetNormal(const Ray &ray, const vec3 &point);
 };

@@ -1,21 +1,21 @@
-#include "triangle.h"
+#include "Triangle.h"
 
 #define EPSILON 0.000001
 
-bool triangle::CheckRayCollision(const ray &ray, float *distance, vec3 *hitpoint) {
-	const vec3 origin = ray.origin;
-	const vec3 direction = ray.direction;
+bool Triangle::CheckRayCollision(const Ray &Ray, float *distance, vec3 *hitpoint) {
+	const vec3 origin = Ray.origin;
+	const vec3 direction = Ray.direction;
 	vec3 v0v1 = this->point2 - this->point1;
 	vec3 v0v2 = this->point3 - this->point1;
 	vec3 pvec = CrossProduct(direction, v0v2);
 	float det = DotProduct(v0v1, pvec);
 
 #ifdef CULLING 
-	// if the determinant is negative the triangle is backfacing
-	// if the determinant is close to 0, the ray misses the triangle
+	// if the determinant is negative the Triangle is backfacing
+	// if the determinant is close to 0, the Ray misses the Triangle
 	if (det < kEpsilon) return false;
 #else 
-	// ray and triangle are parallel if det is close to 0
+	// Ray and Triangle are parallel if det is close to 0
 	if (fabs(det) < EPSILON) return false;
 #endif 
 	float invDet = 1 / det;
@@ -32,7 +32,7 @@ bool triangle::CheckRayCollision(const ray &ray, float *distance, vec3 *hitpoint
 
 	float t = DotProduct(v0v2, qvec) * invDet;
 
-	//collision is behind ray origin
+	//collision is behind Ray origin
 	if (t < 0)
 		return false;
 	if (distance != nullptr)
@@ -41,6 +41,6 @@ bool triangle::CheckRayCollision(const ray &ray, float *distance, vec3 *hitpoint
 		*hitpoint = origin + direction * t;
 	return true;
 }
-vec3 triangle::GetNormal(const ray &ray, const vec3 &point) {
+vec3 Triangle::GetNormal(const Ray &Ray, const vec3 &point) {
 	return normal;
 }

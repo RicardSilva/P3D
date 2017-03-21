@@ -2,7 +2,7 @@
 
 #include "vec.h"
 #include "mat.h"
-#include "ray.h"
+#include "Ray.h"
 
 #include <cstdlib>
 #include <ctime>
@@ -42,7 +42,7 @@ public:
 
 	}
 
-	ray getPrimaryRay(int x, int y);
-	ray getRandomPrimaryRay(int x, int y); //creates a 
+	Ray getPrimaryRay(int x, int y);
+	Ray getRandomPrimaryRay(int x, int y); //creates a 
 };
 

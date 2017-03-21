@@ -18,8 +18,8 @@ private:
 	vec3 backgroundColor;
 	camera cam;
 	material mat;
-	std::vector <light*> lights;
-	std::vector <object*> objects;
+	std::vector <Light*> lights;
+	std::vector <Object*> objects;
 
 
 public:
@@ -27,11 +27,11 @@ public:
 		backgroundColor = vec3(0.0f, 0.0f, 0.0f);
 	}
 	virtual ~Scene() {
-		for (auto &object : objects) {
-			delete object;
+		for (auto &Object : objects) {
+			delete Object;
 		}
-		for (auto &light : lights) {
-			delete light;
+		for (auto &Light : lights) {
+			delete Light;
 		}
 	}
 
@@ -54,10 +54,10 @@ public:
 	vec3 GetBackgroundColor() {
 		return backgroundColor;
 	}
-	const std::vector<object*> GetObjects() {
+	const std::vector<Object*> GetObjects() {
 		return objects;
 	}
-	const std::vector<light*> GetLights() {
+	const std::vector<Light*> GetLights() {
 		return lights;
 	}
 };

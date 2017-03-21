@@ -4,7 +4,7 @@
 // (c) 2016 by João Madeiras Pereira
 // TEMPLATE: Whitted Ray Tracing NFF scenes and drawing points with Modern OpenGL
 //
-//You should develop your rayTracing( Ray ray, int depth, float RefrIndex) which returns a color and
+//You should develop your rayTracing( Ray Ray, int depth, float RefrIndex) which returns a color and
 // to develop your load_NFF function
 //
 ///////////////////////////////////////////////////////////////////////
@@ -23,9 +23,9 @@
 
 #include "scene.h"
 #include "vec.h"
-#include "ray.h"
+#include "Ray.h"
 
-#define CAPTION "ray tracer"
+#define CAPTION "Ray tracer"
 
 #define VERTEX_COORD_ATTRIB 0
 #define COLOR_ATTRIB 1
@@ -53,30 +53,53 @@ int RES_X, RES_Y;
 
 /* Draw Mode: 0 - point by point; 1 - line by line; 2 - full frame */
 int draw_mode = 2;
+bool antiAliasingEnabled = false;
 
 int WindowHandle = 0;
 
 ///////////////////////////////////////////////////////////////////////  RAY-TRACE SCENE
+Ray computeReflectionRay(Ray &ray, vec3 &normal, vec3 &hitpoint) {
+	float c1 = DotProduct(normal, ray.direction);
+	vec3 reflectDirection = ray.direction - (2 * normal * c1);
 
+	reflectDirection.Normalize();
 
-vec3 rayTracing(ray &ray, int depth, float RefrIndex)
+	return Ray(hitpoint + reflectDirection * 0.0001f, reflectDirection);
+}
+Ray computeRefractionRay(Ray &ray, vec3 &normal, vec3 &hitpoint, float incidingIndex, float refractingIndex) {
+	Ray refractedRay;
+	float n = incidingIndex / refractingIndex;
+
+	float cosI =  DotProduct(normal, -1 * ray.direction);
+	float cosT2 = 1.0f - n * n * (1.0f - cosI * cosI);
+
+	if (cosT2 > 0) {
+		vec3 refractedDirection = ray.direction * n + (normal * (n * cosI - sqrtf(cosT2)));
+
+		refractedDirection.Normalize();
+
+		return Ray(hitpoint + refractedDirection * 0.00001f, refractedDirection);
+	}
+}
+vec3 rayTracing(Ray &ray, int depth, float RefrIndex)
 {
 	vec3 color = vec3();
 
 	bool hit = false;
 	float closestDistance = FLT_MAX;
 	vec3 closestHitpoint;
-	object* closestObj = nullptr;
+	Object* closestObj = nullptr;
 
 	float distance;
 	vec3 hitpoint;
 	
-	const std::vector<object*> objs = scene->GetObjects();
-	//intersect ray with all objects and find a hit point(if any) closest to the start of the ray
+	const std::vector<Object*> objs = scene->GetObjects();
+	//intersect Ray with all objects and find a hit point(if any) closest to the start of the Ray
 	for (auto &obj : objs) {
 		if (obj->CheckRayCollision(ray, &distance, &hitpoint) == true) {
-			hit = true;
+			
 			if (distance < closestDistance) {
+				hit = true;
 				closestDistance = distance;
 				closestObj = obj;
 				closestHitpoint = hitpoint;
@@ -90,82 +113,44 @@ vec3 rayTracing(ray &ray, int depth, float RefrIndex)
 		vec3 l;
 		
 		normal = closestObj->GetNormal(ray, closestHitpoint); //compute normal at the hit point;
-		const std::vector<light*> lights = scene->GetLights();
-		struct ray shadowFiller;
-		for (auto &light : lights) {
+		const std::vector<Light*> lights = scene->GetLights();
+		Ray shadowFiller;
+		for (auto &Light : lights) {
 			
-			l = light->ComputeL(closestHitpoint); //unit light vector from hit point to light source
-			shadowFiller = struct ray(closestHitpoint + l * 0.0001f, l); //offset the hitpoint to avoid self intersection
+			l = Light->ComputeL(closestHitpoint); //unit Light vector from hit point to Light source
+			shadowFiller = Ray(closestHitpoint + l * 0.0001f, l); //offset the hitpoint to avoid self intersection
 			hit = false;
-			//trace shadow ray
+			//trace shadow Ray
 			if (DotProduct(normal, l) > 0) {
 				for (auto &obj : objs) {
-					//check if object is in shadow by checking if light ray collides with any object
+					//check if Object is in shadow by checking if Light Ray collides with any Object
 					if (obj->CheckRayCollision(shadowFiller, nullptr, nullptr) == true) {
 						hit = true;
 						break;
 					}
 				}
-				//if not in shadow add light contributtion to the color of the object
+				//if not in shadow add Light contributtion to the color of the Object
 				if (hit == false) {
-					color += closestObj->GetDiffuseColor(*light, normal, l);
-					color += closestObj->GetSpecularColor(*light, normal, l, -1 * ray.direction);
+					color += closestObj->GetDiffuseColor(*Light, normal, l);
+					color += closestObj->GetSpecularColor(*Light, normal, l, -1 * ray.direction);
 				}
 			}
 		}
-		//TODO: REMOVE NEXT LINE
-		//return color; 
 		if (depth >= MAX_DEPTH) return color;
 		
 		if (closestObj->isReflective()) {
-			struct ray reflectiveRay;
-
-			float c1 = DotProduct(normal, ray.direction);
-			vec3 reflectDirection = ray.direction + (2 * normal * c1);
-			
-			reflectDirection.Normalize();
-			
-			reflectiveRay = struct ray(closestHitpoint + reflectDirection * 0.0001f, reflectDirection);
-
+			Ray reflectiveRay = computeReflectionRay(ray, normal, closestHitpoint);
 			vec3 rColor = rayTracing(reflectiveRay, depth + 1 , closestObj->mat.refraction_index);
-
-			color += rColor * closestObj->getReflectionCoeficient();
+			color += rColor * closestObj->GetReflectance();
 		}
 		
 		if (closestObj->isTransmissive()) {
-			struct ray refractedRay;
-
-			float refractionIndex = closestObj->mat.refraction_index;
-
-			float n = refractionIndex / RefrIndex;
-			
-			float cosI = -1.0f * DotProduct(normal, ray.direction);
-			float cosT2 = 1.0f - n * n * (1.0f - cosI - cosI);
-
-			if (cosT2 > 0) {
-				vec3 refractedDirection = (normal, ray.direction * n) + (normal * (n * cosI - sqrtf(cosT2)));
-
-				refractedDirection.Normalize();
-
-				refractedRay = struct ray(closestHitpoint + refractedDirection * 0.0001f, refractedDirection);
-
-				vec3 tColor = rayTracing(refractedRay, depth + 1, closestObj->mat.refraction_index);
-
-				color += tColor * closestObj->mat.t;
-			}
+			Ray refractedRay = computeRefractionRay(ray, normal, closestHitpoint, RefrIndex, closestObj->GetEnterRefractionIndex(ray));
+			vec3 tColor = rayTracing(refractedRay, depth + 1, closestObj->GetExitRefractionIndex(ray));
+			color += tColor * closestObj->GetTransmittance();
+	
 		}
 		
-		/*if (reflective object) {
-			rRay = calculate ray in the reflected direction;
-			rColor = trace(scene, point, rRay direction, depth + 1);
-			reduce rColor by the specular reflection coefficient and add to color;
-		}
-		if (translucid object) {
-			tRay = calculate ray in the refracted direction;
-			tColor = trace(scene, point, tRay direction, depth + 1);
-			reduce tColor by the transmittance coefficient and add to color;
-		}*/
-
 	}
 	return color;
 }
@@ -319,7 +304,7 @@ void drawPoints()
 
 /////////////////////////////////////////////////////////////////////// CALLBACKS
 
-// Render function by primary ray casting from the eye towards the scene's objects
+// Render function by primary Ray casting from the eye towards the scene's objects
 
 void renderScene()
 {
@@ -332,15 +317,18 @@ void renderScene()
 		{
 			
 			vec3 color = vec3();
-			for (int r = 0; r < ANTI_ALISING_NUMBER; r++)
-			{
-				ray ray = scene->GetCamera().getRandomPrimaryRay(x, y);
-				color += rayTracing(ray, 1, 1.0);
+			if (antiAliasingEnabled) {
+				for (int r = 0; r < ANTI_ALISING_NUMBER; r++)
+				{
+					Ray Ray = scene->GetCamera().getRandomPrimaryRay(x, y);
+					color += rayTracing(Ray, 1, 1.0);
+				}
 			}
-			ray ray = scene->GetCamera().getPrimaryRay(x, y);
+			Ray Ray = scene->GetCamera().getPrimaryRay(x, y);
 			
-			color += rayTracing(ray, 1, 1.0);
-			color /= ANTI_ALISING_NUMBER+1;
+			color += rayTracing(Ray, 1, 1.0);
+			if (antiAliasingEnabled) 
+				color /= ANTI_ALISING_NUMBER+1;
 
 			vertices[index_pos++] = (float)x;
 			vertices[index_pos++] = (float)y;
@@ -461,7 +449,7 @@ int main(int argc, char* argv[])
 {
 	
 	scene = new Scene();
-	if (!(scene->LoadSceneNFF("scenes/balls_low.nff"))) return 0;
+	if (!(scene->LoadSceneNFF("scenes/mount_very_high.nff"))) return 0;
 	RES_X = scene->GetCamera().resolutionX;
 	RES_Y = scene->GetCamera().resolutionY;
 

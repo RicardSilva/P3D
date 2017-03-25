@@ -3,6 +3,8 @@
 #define EPSILON 0.000001
 
 bool Triangle::CheckRayCollision(const Ray &Ray, float *distance, vec3 *hitpoint) {
+	//Implementation of Tomas Moller algorithm
+    //http://www.cs.virginia.edu/~gfx/courses/2003/ImageSynthesis/papers/Acceleration/Fast%20MinimumStorage%20RayTriangle%20Intersection.pdf
 	const vec3 origin = Ray.origin;
 	const vec3 direction = Ray.direction;
 	vec3 v0v1 = this->point2 - this->point1;
@@ -10,14 +12,10 @@ bool Triangle::CheckRayCollision(const Ray &Ray, float *distance, vec3 *hitpoint
 	vec3 pvec = CrossProduct(direction, v0v2);
 	float det = DotProduct(v0v1, pvec);
 
-#ifdef CULLING 
-	// if the determinant is negative the Triangle is backfacing
-	// if the determinant is close to 0, the Ray misses the Triangle
-	if (det < kEpsilon) return false;
-#else 
+
 	// Ray and Triangle are parallel if det is close to 0
 	if (fabs(det) < EPSILON) return false;
-#endif 
+
 	float invDet = 1 / det;
 
 	vec3 tvec = origin - point1;

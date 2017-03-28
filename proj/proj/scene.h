@@ -2,6 +2,7 @@
 #include "camera.h"
 #include "material.h"
 #include "light.h"
+#include "AreaLight.h"
 #include "object.h"
 #include "sphere.h"
 #include "plane.h"

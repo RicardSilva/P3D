@@ -43,6 +43,7 @@ public:
 	}
 
 	Ray getPrimaryRay(int x, int y);
-	Ray getRandomPrimaryRay(int x, int y); //creates a 
+	Ray getRandomPrimaryRay(int x, int y); 
+	Ray getJitteredPrimaryRay(int x, int y, int p, int q, int n);
 };
 

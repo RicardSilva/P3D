@@ -109,7 +109,7 @@ void Scene::ParseLight(std::stringstream& sin) {
 		sin >> color.x >> color.y >> color.z;
 	else
 		color = vec3(1.0f, 1.0f, 1.0f);
-	Light *l = new Light(position, color);
+	Light *l = new AreaLight(position, color);
 	lights.push_back(l);
 }
 void Scene::ParseMaterial(std::stringstream& sin) {

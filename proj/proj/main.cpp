@@ -29,11 +29,15 @@
 #define VERTEX_COORD_ATTRIB 0
 #define COLOR_ATTRIB 1
 #define ANTI_ALISING_NUMBER 5
+#define SAMPLES_PER_PIXEL 3
 
 #define MAX_DEPTH 3
 /* Draw Mode: 0 - point by point; 1 - line by line; 2 - full frame */
 int draw_mode = 2;
-bool antiAliasingEnabled = true;
+/* AntiAliasing Mode: 0 - no aliasing; 1 - random aliasing; 2 - jittering aliasing */
+int antiAliasing_mode = 1;
+/* Shadows Mode: 0 - hardShadows; 1 - soft shadows; 2 - soft jittering shadows */
+int shadow_mode = 1;
 
 // Points defined by 2 attributes: positions which are stored in vertices array and colors which are stored in colors array
 float *colors;
@@ -321,20 +325,32 @@ void renderScene()
 	{
 		for (int x = 0; x < RES_X; x++)
 		{
-			
 			vec3 color = vec3();
-			if (antiAliasingEnabled) {
+
+			if (antiAliasing_mode == 0) {
+				Ray Ray = scene->GetCamera().getPrimaryRay(x, y);
+				color += rayTracing(Ray, 1, 1.0);
+			}
+			else if (antiAliasing_mode == 1) {
 				for (int r = 0; r < ANTI_ALISING_NUMBER; r++)
 				{
 					Ray Ray = scene->GetCamera().getRandomPrimaryRay(x, y);
 					color += rayTracing(Ray, 1, 1.0);
 				}
+				Ray Ray = scene->GetCamera().getPrimaryRay(x, y);
+				color += rayTracing(Ray, 1, 1.0);
+				color /= ANTI_ALISING_NUMBER + 1;
+			}			
+
+			else if (antiAliasing_mode == 2) {
+				for (int p = 0; p < SAMPLES_PER_PIXEL; p++) {
+					for (int q = 0; q < SAMPLES_PER_PIXEL; q++) {
+						Ray Ray = scene->GetCamera().getJitteredPrimaryRay(x, y, p, q, SAMPLES_PER_PIXEL);
+						color += rayTracing(Ray, 1, 1.0);
+					}
+				}
+				color /= (SAMPLES_PER_PIXEL * SAMPLES_PER_PIXEL);
 			}
-			Ray Ray = scene->GetCamera().getPrimaryRay(x, y);
-			
-			color += rayTracing(Ray, 1, 1.0);
-			if (antiAliasingEnabled) 
-				color /= ANTI_ALISING_NUMBER+1;
 
 			vertices[index_pos++] = (float)x;
 			vertices[index_pos++] = (float)y;
@@ -457,7 +473,7 @@ int main(int argc, char* argv[])
 {
 	
 	scene = new Scene();
-	if (!(scene->LoadSceneNFF("scenes/balls_high.nff"))) return 0;
+	if (!(scene->LoadSceneNFF("scenes/balls_low.nff"))) return 0;
 	RES_X = scene->GetCamera().resolutionX;
 	RES_Y = scene->GetCamera().resolutionY;
 

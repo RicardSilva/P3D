@@ -28,16 +28,17 @@
 
 #define VERTEX_COORD_ATTRIB 0
 #define COLOR_ATTRIB 1
-#define ANTI_ALISING_NUMBER 5
-#define SAMPLES_PER_PIXEL 3
 
 #define MAX_DEPTH 3
+#define ANTI_ALIASING_NUMBER 3	// SQRT OF THE RAYS PER PIXEL IN ANTI-ALIASING MODE OF 1 AND 2
+#define SHADOW_NUMBER 2			// SQRT OF THE NUMBER OF SHADOW FILLERS PER POINT IN SHADOW MODE 2 AND 3
+
 /* Draw Mode: 0 - point by point; 1 - line by line; 2 - full frame */
-int draw_mode = 2;
-/* AntiAliasing Mode: 0 - no aliasing; 1 - random aliasing; 2 - jittering aliasing */
-int antiAliasing_mode = 1;
-/* Shadows Mode: 0 - hardShadows; 1 - soft shadows; 2 - soft jittering shadows */
-int shadow_mode = 1;
+int draw_mode = 1;
+/* AntiAliasing Mode: 0 - no aliasing; 1 - iterative random aliasing; 2 - jittering aliasing */
+int antiAliasing_mode = 2;
+/* Shadows Mode: 0 - hardShadows; 1 - random soft shadows; 2 - iterative random soft shadows; 3 - soft jittering shadows */
+int shadow_mode = 2;
 
 // Points defined by 2 attributes: positions which are stored in vertices array and colors which are stored in colors array
 float *colors;
@@ -118,29 +119,40 @@ vec3 rayTracing(Ray &ray, int depth, float RefrIndex)
 		return scene->GetBackgroundColor();
 	else {
 		vec3 normal;
-		vec3 l;
+		vec3 light_direction;
 		
 		normal = closestObj->GetNormal(ray, closestHitpoint); //compute normal at the hit point;
 		const std::vector<Light*> lights = scene->GetLights();
+		int shadow_number = 1;
+		if(shadow_mode == 2){
+			shadow_number = SHADOW_NUMBER*SHADOW_NUMBER;
+		}
+
 		Ray shadowFiller;
-		for (auto &Light : lights) {
-			
-			l = Light->ComputeL(closestHitpoint); //unit Light vector from hit point to Light source
-			shadowFiller = Ray(closestHitpoint + l * 0.0001f, l); //offset the hitpoint to avoid self intersection
-			hit = false;
-			//trace shadow Ray
-			if (DotProduct(normal, l) > 0) {
-				for (auto &obj : objs) {
-					//check if Object is in shadow by checking if Light Ray collides with any Object
-					if (obj->CheckRayCollision(shadowFiller, nullptr, nullptr) == true) {
-						hit = true;
-						break;
+		for (auto &l : lights) {
+			Light* new_l = l;
+			if (shadow_mode != 0)
+				 new_l = &(AreaLight(*l));
+
+			for (int s = 0; s < shadow_number; s++) {
+				light_direction = new_l->ComputeL(closestHitpoint); //unit Light vector from hit point to Light source
+
+				shadowFiller = Ray(closestHitpoint + light_direction * 0.0001f, light_direction); //offset the hitpoint to avoid self intersection
+				hit = false;
+				//trace shadow Ray
+				if (DotProduct(normal, light_direction) > 0) {
+					for (auto &obj : objs) {
+						//check if Object is in shadow by checking if Light Ray collides with any Object
+						if (obj->CheckRayCollision(shadowFiller, nullptr, nullptr) == true) {
+							hit = true;
+							break;
+						}
 					}
-				}
-				//if not in shadow add Light contributtion to the color of the Object
-				if (hit == false) {
-					color += closestObj->GetDiffuseColor(*Light, normal, l);
-					color += closestObj->GetSpecularColor(*Light, normal, l, -1 * ray.direction);
+					//if not in shadow add Light contributtion to the color of the Object
+					if (hit == false) {
+						color += closestObj->GetDiffuseColor(*l, normal, light_direction)/shadow_number;
+						color += closestObj->GetSpecularColor(*l, normal, light_direction, -1 * ray.direction)/shadow_number;
+					}
 				}
 			}
 		}
@@ -332,24 +344,24 @@ void renderScene()
 				color += rayTracing(Ray, 1, 1.0);
 			}
 			else if (antiAliasing_mode == 1) {
-				for (int r = 0; r < ANTI_ALISING_NUMBER; r++)
+				for (int r = 0; r < ANTI_ALIASING_NUMBER*ANTI_ALIASING_NUMBER; r++)
 				{
 					Ray Ray = scene->GetCamera().getRandomPrimaryRay(x, y);
 					color += rayTracing(Ray, 1, 1.0);
 				}
 				Ray Ray = scene->GetCamera().getPrimaryRay(x, y);
 				color += rayTracing(Ray, 1, 1.0);
-				color /= ANTI_ALISING_NUMBER + 1;
+				color /= ANTI_ALIASING_NUMBER*ANTI_ALIASING_NUMBER + 1;
 			}			
 
 			else if (antiAliasing_mode == 2) {
-				for (int p = 0; p < SAMPLES_PER_PIXEL; p++) {
-					for (int q = 0; q < SAMPLES_PER_PIXEL; q++) {
-						Ray Ray = scene->GetCamera().getJitteredPrimaryRay(x, y, p, q, SAMPLES_PER_PIXEL);
+				for (int p = 0; p < ANTI_ALIASING_NUMBER; p++) {
+					for (int q = 0; q < ANTI_ALIASING_NUMBER; q++) {
+						Ray Ray = scene->GetCamera().getJitteredPrimaryRay(x, y, p, q, ANTI_ALIASING_NUMBER);
 						color += rayTracing(Ray, 1, 1.0);
 					}
 				}
-				color /= (SAMPLES_PER_PIXEL * SAMPLES_PER_PIXEL);
+				color /= (ANTI_ALIASING_NUMBER * ANTI_ALIASING_NUMBER);
 			}
 
 			vertices[index_pos++] = (float)x;

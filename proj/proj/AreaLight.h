@@ -4,8 +4,7 @@
 
 struct AreaLight : public Light {
 	vec3 a, b;
-
-
+	
 	AreaLight(const vec3 &position, const vec3 &color) : Light(position, color) {
 	
 		vec3 normal = vec3(0,0,0) - position; // points light to origin
@@ -26,6 +25,8 @@ struct AreaLight : public Light {
 		b.Normalize();	
 	}
 
+	AreaLight(Light l) : AreaLight(l.position, l.color) {};
+
 	vec3 ComputeL(const vec3 &hitpoint) {
 		float k1 = ((double)rand() / (RAND_MAX)) - 0.5f;
 		float k2 = ((double)rand() / (RAND_MAX)) - 0.5f;
@@ -34,5 +35,4 @@ struct AreaLight : public Light {
 		l.Normalize();
 		return l;
 	}
-
 };

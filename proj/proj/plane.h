@@ -30,7 +30,7 @@ public:
 		d = z / magnitude;
 
 	}
-
+	Plane(const vec3 &normal, const float d) : normal(normal), d(d) {}
 	virtual bool Object::CheckRayCollision(const Ray &Ray, float *distance, vec3 *hitpoint);
 	virtual vec3 GetNormal(const Ray &Ray, const vec3 &point);
 };

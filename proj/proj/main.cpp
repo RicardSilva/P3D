@@ -23,6 +23,8 @@
 #include "scene.h"
 #include "vec.h"
 #include "Ray.h"
+#include "camera.h"
+#include "lenscamera.h"
 
 #define CAPTION "Ray tracer"
 
@@ -34,13 +36,19 @@
 #define SHADOW_NUMBER 4			// SQRT OF THE NUMBER OF SHADOW FILLERS PER POINT IN SHADOW MODE 2 AND 3
 								// IN SHADOW MODE 3 WE SHOULD HAVE ANTI_ALIASING_NUMBER == SHADOW_NUMBER!!!! 
 
+#define FOCAL_DISTANCE 1
+#define APERTURE 1
+
+
 /* Draw Mode: 0 - point by point; 1 - line by line; 2 - full frame */
 int draw_mode = 1;
 /* AntiAliasing Mode: 0 - no aliasing; 1 - iterative random aliasing; 2 - jittering aliasing */
-int antiAliasing_mode = 2;
+int antiAliasing_mode = 0;
 /* Shadows Mode: 0 - hardShadows; 1 - random soft shadows; 2 - iterative random soft shadows; 3 - soft jittering shadows */
 int shadow_mode = 3;
 int shadow_shuffle = 0;
+/* Camera Mode: 0 - pinhole camera; 1 - lens camera */
+int camera_mode = 1;
 
 // Points defined by 2 attributes: positions which are stored in vertices array and colors which are stored in colors array
 float *colors;
@@ -58,6 +66,7 @@ GLuint VertexShaderId, FragmentShaderId, ProgramId;
 GLint UniformId;
 
 Scene* scene = NULL;
+camera cam;
 int RES_X, RES_Y;
 
 std::chrono::steady_clock::time_point begin;
@@ -340,6 +349,7 @@ void renderScene()
 	int index_pos = 0;
 	int index_col = 0;
 	begin = std::chrono::steady_clock::now();
+	
 	for (int y = 0; y < RES_Y; y++)
 	{
 		for (int x = 0; x < RES_X; x++)
@@ -347,8 +357,13 @@ void renderScene()
 			vec3 color = vec3();
 
 			if (antiAliasing_mode == 0) {
-				Ray Ray = scene->GetCamera().getPrimaryRay(x, y);
-				color += rayTracing(Ray, 1, 1.0);
+				Ray ray = scene->GetCamera().getPrimaryRay(x, y);
+				if (camera_mode == 1) {
+					vec3 focalPoint = cam.getFocalPoint(ray);
+					vec3 samplePoint = cam.getLenseSamplePoint();
+					ray = Ray(samplePoint, (focalPoint - samplePoint).Normalized());
+				}
+				color += rayTracing(ray, 1, 1.0);
 			}
 			else if (antiAliasing_mode == 1) {
 				for (int r = 0; r < ANTI_ALIASING_NUMBER*ANTI_ALIASING_NUMBER; r++)
@@ -497,6 +512,11 @@ int main(int argc, char* argv[])
 	
 	scene = new Scene();
 	if (!(scene->LoadSceneNFF("scenes/balls_low.nff"))) return 0;
+	cam = scene->GetCamera();
+	if (camera_mode == 1) {
+		cam = lenscamera(&cam, FOCAL_DISTANCE, APERTURE);
+	}
+
 	RES_X = scene->GetCamera().resolutionX;
 	RES_Y = scene->GetCamera().resolutionY;
 

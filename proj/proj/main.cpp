@@ -39,7 +39,7 @@ int draw_mode = 2;
 /* AntiAliasing Mode: 0 - no aliasing; 1 - iterative random aliasing; 2 - jittering aliasing */
 int antiAliasing_mode = 2;
 /* Shadows Mode: 0 - hardShadows; 1 - random soft shadows; 2 - iterative random soft shadows; 3 - soft jittering shadows */
-int shadow_mode = 0;
+int shadow_mode = 3;
 int shadow_shuffle = 0;
 
 // Points defined by 2 attributes: positions which are stored in vertices array and colors which are stored in colors array
@@ -502,15 +502,6 @@ int main(int argc, char* argv[])
 	RES_Y = camera.resolutionY;
 	objects = scene->GetObjects();
 	lights = scene->GetLights();
-	if (shadow_mode != 0) {
-		std::vector<Light*> arealights;
-		for (auto &l : lights) {
-			arealights.push_back(new AreaLight(l));
-			delete l;
-		}
-		lights.clear();
-		lights = arealights;
-	}
 
 	if (draw_mode == 0) { // desenhar o conteúdo da janela ponto a ponto
 		size_vertices = 2 * sizeof(float);

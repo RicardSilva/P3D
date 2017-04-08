@@ -49,7 +49,7 @@ bool Scene::LoadSceneNFF(std::string fileName) {
 			sin = std::stringstream(line);
 			sin >> junk >> resX >> resY;
 
-			this->cam = camera(eye, at, up, fovy, near, 1000, resX, resY);
+			this->cam = Camera(eye, at, up, fovy, near, 1000, resX, resY);
 			
 		}
 		else if (keyword.compare("b") == 0) ParseBackground(sin);
@@ -109,7 +109,7 @@ void Scene::ParseLight(std::stringstream& sin) {
 		sin >> color.x >> color.y >> color.z;
 	else
 		color = vec3(1.0f, 1.0f, 1.0f);
-	Light *l = new Light(position, color);
+	Light *l = new AreaLight(position, color);
 	lights.push_back(l);
 }
 void Scene::ParseMaterial(std::stringstream& sin) {

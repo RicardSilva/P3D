@@ -27,7 +27,7 @@ struct AreaLight : public Light {
 
 	AreaLight(Light* l) : AreaLight(l->position, l->color) {};
 
-	vec3 ComputeL(const vec3 &hitpoint) {
+	vec3 ComputeRandomL(const vec3 &hitpoint) {
 		float k1 = ((double)rand() / (RAND_MAX)) - 0.5f;
 		float k2 = ((double)rand() / (RAND_MAX)) - 0.5f;
 		vec3 randomPosition = position + k1 * a + k2 * b;

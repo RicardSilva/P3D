@@ -1,5 +1,5 @@
 #pragma once
-#include "camera.h"
+#include "Camera.h"
 #include "material.h"
 #include "light.h"
 #include "AreaLight.h"
@@ -17,7 +17,7 @@
 class Scene {
 private:
 	vec3 backgroundColor;
-	camera cam;
+	Camera cam;
 	material mat;
 	std::vector <Light*> lights;
 	std::vector <Object*> objects;
@@ -49,7 +49,7 @@ public:
 	void ParsePolygonPatch(std::stringstream& sin);
 	void ParsePlane(std::stringstream& sin);
 
-	camera GetCamera() {
+	Camera GetCamera() {
 		return cam;
 	}
 	vec3 GetBackgroundColor() {

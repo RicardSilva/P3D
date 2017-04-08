@@ -8,7 +8,7 @@
 #include <ctime>
 #include <iostream>
 
-struct camera {
+struct Camera {
 	
 	vec3 eye;
 	vec3 at;
@@ -25,8 +25,8 @@ struct camera {
 
 
 public:
-	camera() {}
-	camera(vec3 eye, vec3 at, vec3 up, float fovy, float near, float far, int resX, int resY) 
+	Camera() {}
+	Camera(vec3 eye, vec3 at, vec3 up, float fovy, float near, float far, int resX, int resY) 
 		: eye(eye), at(at), up(up), fovy(fovy), nearp(near), farp(far), resolutionX(resX), resolutionY(resY)
 	{
 		srand(time(NULL));

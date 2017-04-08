@@ -35,11 +35,11 @@
 								// IN SHADOW MODE 3 WE SHOULD HAVE ANTI_ALIASING_NUMBER == SHADOW_NUMBER!!!! 
 
 /* Draw Mode: 0 - point by point; 1 - line by line; 2 - full frame */
-int draw_mode = 1;
+int draw_mode = 2;
 /* AntiAliasing Mode: 0 - no aliasing; 1 - iterative random aliasing; 2 - jittering aliasing */
 int antiAliasing_mode = 2;
 /* Shadows Mode: 0 - hardShadows; 1 - random soft shadows; 2 - iterative random soft shadows; 3 - soft jittering shadows */
-int shadow_mode = 3;
+int shadow_mode = 0;
 int shadow_shuffle = 0;
 
 // Points defined by 2 attributes: positions which are stored in vertices array and colors which are stored in colors array
@@ -58,7 +58,11 @@ GLuint VertexShaderId, FragmentShaderId, ProgramId;
 GLint UniformId;
 
 Scene* scene = NULL;
+Camera camera;
 int RES_X, RES_Y;
+std::vector <Light*> lights;
+std::vector <Object*> objects;
+
 
 std::chrono::steady_clock::time_point begin;
 std::chrono::steady_clock::time_point end;
@@ -104,9 +108,9 @@ vec3 rayTracing(Ray &ray, int depth, float RefrIndex)
 	float distance;
 	vec3 hitpoint;
 	
-	const std::vector<Object*> objs = scene->GetObjects();
+	
 	//intersect Ray with all objects and find a hit point(if any) closest to the start of the Ray
-	for (auto &obj : objs) {
+	for (auto &obj : objects) {
 		if (obj->CheckRayCollision(ray, &distance, &hitpoint) == true) {
 			
 			if (distance < closestDistance) {
@@ -124,7 +128,6 @@ vec3 rayTracing(Ray &ray, int depth, float RefrIndex)
 		vec3 light_direction;
 		
 		normal = closestObj->GetNormal(ray, closestHitpoint); //compute normal at the hit point;
-		const std::vector<Light*> lights = scene->GetLights();
 		int shadow_number = 1;
 		if(shadow_mode == 2){
 			shadow_number = SHADOW_NUMBER*SHADOW_NUMBER;
@@ -132,24 +135,22 @@ vec3 rayTracing(Ray &ray, int depth, float RefrIndex)
 		
 		Ray shadowFiller;
 		for (auto &l : lights) {
-			Light* new_l = l;
-			if (shadow_mode != 0)
-				 new_l = &(AreaLight(l));
-
 			for (int s = 0; s < shadow_number; s++) {
 				
-				if (shadow_mode == 3) {
-					AreaLight *a_light = &(AreaLight(new_l));
-					light_direction = a_light->ComputeJitteringL(closestHitpoint,shadow_shuffle%SHADOW_NUMBER,(shadow_shuffle/SHADOW_NUMBER)%SHADOW_NUMBER,SHADOW_NUMBER); //unit Light vector from hit point to Light source
+				if (shadow_mode == 0) {
+					light_direction = l->ComputeL(closestHitpoint);
 				}
-				else {
-					light_direction = new_l->ComputeL(closestHitpoint); //unit Light vector from hit point to Light source
+				else if (shadow_mode == 1 || shadow_mode == 2) {
+					light_direction = l->ComputeRandomL(closestHitpoint);
+				}
+				else if (shadow_mode == 3) {
+					light_direction = l->ComputeJitteringL(closestHitpoint,shadow_shuffle%SHADOW_NUMBER,(shadow_shuffle/SHADOW_NUMBER)%SHADOW_NUMBER,SHADOW_NUMBER); 
 				}
 				shadowFiller = Ray(closestHitpoint + light_direction * 0.0001f, light_direction); //offset the hitpoint to avoid self intersection
 				hit = false;
 				//trace shadow Ray
 				if (DotProduct(normal, light_direction) > 0) {
-					for (auto &obj : objs) {
+					for (auto &obj : objects) {
 						//check if Object is in shadow by checking if Light Ray collides with any Object
 						if (obj->CheckRayCollision(shadowFiller, nullptr, nullptr) == true) {
 							hit = true;
@@ -347,24 +348,23 @@ void renderScene()
 			vec3 color = vec3();
 
 			if (antiAliasing_mode == 0) {
-				Ray Ray = scene->GetCamera().getPrimaryRay(x, y);
+				Ray Ray = camera.getPrimaryRay(x, y);
 				color += rayTracing(Ray, 1, 1.0);
 			}
 			else if (antiAliasing_mode == 1) {
 				for (int r = 0; r < ANTI_ALIASING_NUMBER*ANTI_ALIASING_NUMBER; r++)
 				{
-					Ray Ray = scene->GetCamera().getRandomPrimaryRay(x, y);
+					Ray Ray = camera.getRandomPrimaryRay(x, y);
 					color += rayTracing(Ray, 1, 1.0);
 				}
-				Ray Ray = scene->GetCamera().getPrimaryRay(x, y);
+				Ray Ray = camera.getPrimaryRay(x, y);
 				color += rayTracing(Ray, 1, 1.0);
 				color /= ANTI_ALIASING_NUMBER*ANTI_ALIASING_NUMBER + 1;
 			}			
-
 			else if (antiAliasing_mode == 2) {
 				for (int p = 0; p < ANTI_ALIASING_NUMBER; p++) {
 					for (int q = 0; q < ANTI_ALIASING_NUMBER; q++) {
-						Ray Ray = scene->GetCamera().getJitteredPrimaryRay(x, y, p, q, ANTI_ALIASING_NUMBER);
+						Ray Ray = camera.getJitteredPrimaryRay(x, y, p, q, ANTI_ALIASING_NUMBER);
 						color += rayTracing(Ray, 1, 1.0);
 						if (shadow_mode == 3)
 							shadow_shuffle++;
@@ -497,8 +497,20 @@ int main(int argc, char* argv[])
 	
 	scene = new Scene();
 	if (!(scene->LoadSceneNFF("scenes/balls_low.nff"))) return 0;
-	RES_X = scene->GetCamera().resolutionX;
-	RES_Y = scene->GetCamera().resolutionY;
+	camera = scene->GetCamera();
+	RES_X = camera.resolutionX;
+	RES_Y = camera.resolutionY;
+	objects = scene->GetObjects();
+	lights = scene->GetLights();
+	if (shadow_mode != 0) {
+		std::vector<Light*> arealights;
+		for (auto &l : lights) {
+			arealights.push_back(new AreaLight(l));
+			delete l;
+		}
+		lights.clear();
+		lights = arealights;
+	}
 
 	if (draw_mode == 0) { // desenhar o conteúdo da janela ponto a ponto
 		size_vertices = 2 * sizeof(float);

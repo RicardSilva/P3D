@@ -3,14 +3,16 @@
 #include "vec.h"
 #include "ray.h"
 #include "light.h"
+#include "boundingbox.h"
 #include <stdlib.h>
 
 class Object {
-public:
+protected:
 	material mat;
+	BoundingBox bb;
+
 
 public:
-	Object() {}
 	Object(const material &mat) : mat(mat) {}
 
 
@@ -18,17 +20,13 @@ public:
 	vec3 GetDiffuseColor(Light &light, vec3 &normal, vec3 &l);
 	vec3 GetSpecularColor(Light &light, vec3 &normal, vec3 &l, vec3 &v);
 
-	float getReflectionCoeficient();
+	BoundingBox GetBoundingBox() { return bb; }
 
-	bool isReflective();
-	bool isTransmissive();
+	bool isReflective() { return mat.Ks > 0.0f; }
+	bool isTransmissive() { return mat.t > 0.0f; }
 
-	float GetReflectance() {
-		return mat.Ks;
-	}
-	float GetTransmittance() {
-		return mat.t;
-	}
+	float GetReflectance() { return mat.Ks;	}
+	float GetTransmittance() { return mat.t; }
 
 	virtual float GetEnterRefractionIndex(const Ray &ray) { return mat.refraction_index; }
 	virtual float GetExitRefractionIndex(const Ray &ray) { return 1.0f; }

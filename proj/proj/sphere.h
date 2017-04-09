@@ -9,7 +9,6 @@ class Sphere : public Object {
 	float radius;
 
 public:
-	Sphere() {}
 	Sphere(const vec3 &centre, float radius, const material &mat) : Object(mat), centre(centre), radius(radius) {}
 
 	float GetEnterRefractionIndex(const Ray &ray);

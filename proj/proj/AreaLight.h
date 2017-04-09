@@ -28,8 +28,8 @@ struct AreaLight : public Light {
 	AreaLight(Light* l) : AreaLight(l->position, l->color) {};
 
 	vec3 ComputeRandomL(const vec3 &hitpoint) {
-		float k1 = ((double)rand() / (RAND_MAX)) - 0.5f;
-		float k2 = ((double)rand() / (RAND_MAX)) - 0.5f;
+		float k1 = ((float)rand() / RAND_MAX) - 0.5f;
+		float k2 = ((float)rand() / RAND_MAX) - 0.5f;
 		vec3 randomPosition = position + k1 * a + k2 * b;
 		vec3 l = randomPosition - hitpoint;
 		l.Normalize();
@@ -37,8 +37,8 @@ struct AreaLight : public Light {
 	}
 
 	vec3 ComputeJitteringL(const vec3 &hitpoint, int p, int q, int n) {
-		float k1 = ((double)rand() / (RAND_MAX));
-		float k2 = ((double)rand() / (RAND_MAX));
+		float k1 = ((float)rand() / RAND_MAX);
+		float k2 = ((float)rand() / RAND_MAX);
 		vec3 randomPosition = position + ((p + k1)/n - 0.5)* a + ((q + k2)/n - 0.5) * b;
 		vec3 l = randomPosition - hitpoint;
 		l.Normalize();

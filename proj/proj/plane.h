@@ -9,7 +9,6 @@ class Plane : public Object {
 	float d;
 
 public:
-	Plane() {}
 	Plane(const vec3 &point1, const vec3 &point2, const vec3 &point3, const material &mat) 
 		: Object(mat) {
 

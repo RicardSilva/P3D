@@ -41,6 +41,8 @@ int antiAliasing_mode = 2;
 /* Shadows Mode: 0 - hardShadows; 1 - random soft shadows; 2 - iterative random soft shadows; 3 - soft jittering shadows */
 int shadow_mode = 3;
 int shadow_shuffle = 0;
+/* Acceleration mode: 0 - no acceleration; 1 - grid based acceleration */
+int acceleration_mode = 0;
 
 // Points defined by 2 attributes: positions which are stored in vertices array and colors which are stored in colors array
 float *colors;

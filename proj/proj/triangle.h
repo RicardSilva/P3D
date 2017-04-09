@@ -12,7 +12,6 @@ class Triangle : public Object {
 	
 	vec3 normal;
 public:
-	Triangle() {}
 	Triangle(std::vector<vec3> points, const material &mat) 
 		: Object(mat), point1(points[0]), point2(points[1]), point3(points[2]) {
 		vec3 v1, v2;

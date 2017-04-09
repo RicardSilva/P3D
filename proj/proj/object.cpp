@@ -30,18 +30,3 @@ vec3 Object::GetSpecularColor(Light &Light, vec3 &normal, vec3 &l, vec3 &v) {
 	return color;
 }
 
-float Object::getReflectionCoeficient()
-{
-	return mat.Ks;
-}
-
-bool Object::isReflective()
-{
-
-	return (mat.Ks>0.0f);
-}
-
-bool Object::isTransmissive()
-{
-	return (mat.t > 0);
-}

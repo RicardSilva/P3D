@@ -42,3 +42,24 @@ bool Triangle::CheckRayCollision(const Ray &Ray, float *distance, vec3 *hitpoint
 vec3 Triangle::GetNormal(const Ray &Ray, const vec3 &point) {
 	return normal;
 }
+
+void Triangle::InitializeBoundingBox(std::vector<vec3> points) {
+	vec3 min = vec3(FLT_MAX, FLT_MAX, FLT_MAX);
+	vec3 max = vec3(FLT_MIN, FLT_MIN, FLT_MIN);
+	for (auto &point : points) {
+		if (point.x < min.x)
+			min.x = point.x;
+		if (point.x > max.x)
+			max.x = point.x;
+		if (point.y < min.y)
+			min.y = point.y;
+		if (point.y > max.y)
+			max.y = point.y;
+		if (point.z < min.z)
+			min.z = point.z;
+		if (point.z > max.z)
+			max.z = point.z;
+
+	}
+	bb = BoundingBox(min, max);
+}

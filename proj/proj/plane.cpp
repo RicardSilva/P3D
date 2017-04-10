@@ -23,3 +23,5 @@ bool Plane::CheckRayCollision(const Ray &Ray, float *distance, vec3 *hitpoint) {
 vec3 Plane::GetNormal(const Ray &Ray, const vec3 &point) {
 	return normal;
 }
+
+void Plane::InitializeBoundingBox() {}

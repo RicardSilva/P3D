@@ -139,6 +139,8 @@ struct vec3 {
 	vec3 &operator -= (const vec3 &v);
 	vec3 &operator *= (float scalar);
 	vec3 &operator /= (float scalar);
+	float operator [] (int index);
+	float operator [] (int index) const;
 
 
 	friend float DotProduct(const vec3 &v1, const vec3 &v2) {

@@ -80,3 +80,9 @@ vec3 Sphere::GetNormal(const Ray &Ray, const vec3 &point) {
 
 	return normal;
 }
+
+void Sphere::InitializeBoundingBox() {
+	vec3 min = vec3(centre.x - radius, centre.y - radius, centre.z - radius);
+	vec3 max = vec3(centre.x + radius, centre.y + radius, centre.z + radius);
+	bb = BoundingBox(min, max);
+}

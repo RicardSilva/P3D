@@ -107,6 +107,26 @@ vec3 &vec3::operator/=(float scalar) {
 	}
 	return *this;
 }
+float vec3::operator[](int index) {
+	if (index == 0)
+		return x;
+	else if (index == 1)
+		return y;
+	else if (index == 2)
+		return z;
+	else
+		std::cerr << "vec3: index out of range" << std::endl;
+}
+float vec3::operator[](int index) const {
+	if (index == 0)
+		return x;
+	else if (index == 1)
+		return y;
+	else if (index == 2)
+		return z;
+	else
+		std::cerr << "vec3: index out of range" << std::endl;
+}
 
 void vec3::Clean() {
 	if (fabs(x) < TOLERANCE) x = 0;

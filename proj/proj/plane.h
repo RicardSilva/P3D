@@ -28,8 +28,13 @@ public:
 		normal = n / magnitude;
 		d = z / magnitude;
 
+		InitializeBoundingBox();
+
 	}
 
 	virtual bool Object::CheckRayCollision(const Ray &Ray, float *distance, vec3 *hitpoint);
 	virtual vec3 GetNormal(const Ray &Ray, const vec3 &point);
+
+private:
+	void InitializeBoundingBox();
 };

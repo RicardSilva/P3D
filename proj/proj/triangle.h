@@ -21,8 +21,13 @@ public:
 
 		normal = CrossProduct(v1, v2);
 		normal.Normalize();
+
+		InitializeBoundingBox(points);
+		
 	}
 
 	virtual bool CheckRayCollision(const Ray &Ray, float *distance, vec3 *hitpoint);
 	virtual vec3 GetNormal(const Ray &Ray, const vec3 &point);
+private:
+	void InitializeBoundingBox(std::vector<vec3> points);
 };

@@ -34,6 +34,7 @@
     <ClInclude Include="vec.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="boundingbox.cpp" />
     <ClCompile Include="camera.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="object.cpp" />

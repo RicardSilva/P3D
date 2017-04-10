@@ -9,10 +9,16 @@ class Sphere : public Object {
 	float radius;
 
 public:
-	Sphere(const vec3 &centre, float radius, const material &mat) : Object(mat), centre(centre), radius(radius) {}
+	Sphere(const vec3 &centre, float radius, const material &mat) 
+		: Object(mat), centre(centre), radius(radius) {
+		InitializeBoundingBox();
+	}
 
 	float GetEnterRefractionIndex(const Ray &ray);
 	float GetExitRefractionIndex(const Ray &ray);
 	virtual bool CheckRayCollision(const Ray &ray, float *distance, vec3 *hitpoint);
 	virtual vec3 GetNormal(const Ray &ray, const vec3 &point);
+
+private:
+	void InitializeBoundingBox();
 };

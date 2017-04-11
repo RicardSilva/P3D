@@ -23,6 +23,7 @@
 #include "scene.h"
 #include "vec.h"
 #include "Ray.h"
+#include "grid.h"
 
 #define CAPTION "Ray tracer"
 
@@ -42,7 +43,7 @@ int antiAliasing_mode = 2;
 int shadow_mode = 3;
 int shadow_shuffle = 0;
 /* Acceleration mode: 0 - no acceleration; 1 - grid based acceleration */
-int acceleration_mode = 0;
+int acceleration_mode = 1;
 
 // Points defined by 2 attributes: positions which are stored in vertices array and colors which are stored in colors array
 float *colors;
@@ -64,6 +65,7 @@ Camera camera;
 int RES_X, RES_Y;
 std::vector <Light*> lights;
 std::vector <Object*> objects;
+Grid grid;
 
 
 std::chrono::steady_clock::time_point begin;
@@ -107,21 +109,24 @@ vec3 rayTracing(Ray &ray, int depth, float RefrIndex)
 	vec3 closestHitpoint;
 	Object* closestObj = nullptr;
 
-	float distance;
-	vec3 hitpoint;
-	
-	
-	//intersect Ray with all objects and find a hit point(if any) closest to the start of the Ray
-	for (auto &obj : objects) {
-		if (obj->CheckRayCollision(ray, &distance, &hitpoint) == true) {
-			
-			if (distance < closestDistance) {
-				hit = true;
-				closestDistance = distance;
-				closestObj = obj;
-				closestHitpoint = hitpoint;
+	if (acceleration_mode == 0) {
+		float distance;
+		vec3 hitpoint;
+		//intersect Ray with all objects and find a hit point(if any) closest to the start of the Ray
+		for (auto &obj : objects) {
+			if (obj->CheckRayCollision(ray, &distance, &hitpoint) == true) {
+
+				if (distance < closestDistance) {
+					hit = true;
+					closestDistance = distance;
+					closestObj = obj;
+					closestHitpoint = hitpoint;
+				}
 			}
 		}
+	}
+	else if (acceleration_mode == 1) {
+		hit = grid.Traverse(ray, closestObj, &closestHitpoint);
 	}
 	if (hit == false)
 		return scene->GetBackgroundColor();
@@ -504,7 +509,9 @@ int main(int argc, char* argv[])
 	RES_Y = camera.resolutionY;
 	objects = scene->GetObjects();
 	lights = scene->GetLights();
-
+	if (acceleration_mode == 1) {
+		grid = Grid(objects);
+	}
 	if (draw_mode == 0) { // desenhar o conteúdo da janela ponto a ponto
 		size_vertices = 2 * sizeof(float);
 		size_colors = 3 * sizeof(float);

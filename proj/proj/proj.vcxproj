@@ -36,6 +36,7 @@
   <ItemGroup>
     <ClCompile Include="boundingbox.cpp" />
     <ClCompile Include="camera.cpp" />
+    <ClCompile Include="grid.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="object.cpp" />
     <ClCompile Include="plane.cpp" />

@@ -11,29 +11,30 @@
 
 struct Grid {
 
-	BoundingBox bb;
-	std::vector<Object*>* cells;
+	BoundingBox bbox;
+	std::vector<std::vector<Object*>> cells;
 	float length, height, width;
 	int nx, ny, nz;
 	int objCount;
 	float m = 2.0f; // factor that allows to vary the number of cells
 
+	Grid() {}
 	Grid(std::vector<Object*> objects) {
 		objCount = objects.size();
 		InitializeBoundingBox(objects);
 
-		length = bb.GetLength();
-		height = bb.GetHeight();
-		width = bb.GetWidth();
+		length = bbox.GetLength();
+		height = bbox.GetHeight();
+		width = bbox.GetWidth();
 
 		InitializeCells(objects);
 	}
 	~Grid() {
-		delete [] cells;
+		//delete [] cells;
 	}
 
 	
-	bool Traverse(const Ray &ray);
+	bool Traverse(const Ray &ray, Object *&hitobject, vec3 *hitpoint);
 
 private:
 	void InitializeBoundingBox(std::vector<Object*> objects);

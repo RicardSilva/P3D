@@ -19,7 +19,8 @@ struct lenscamera : public camera {
 	lenscamera(camera* camera, float focalDistance, float aperture) : 
 		camera(camera->eye, camera->at, camera->up, camera->fovy, 
 			camera->nearp, camera->farp, camera->resolutionX, camera->resolutionY),
-		focalPlane(ze, focalDistance), aperture(aperture) {}
+		focalPlane(ze,focalDistance), aperture(aperture) {
+	}
 
 	vec3 getFocalPoint(Ray &r) {
 		vec3 hitpoint;
@@ -27,7 +28,7 @@ struct lenscamera : public camera {
 		return hitpoint;
 	}
 
-	vec3 getLenseSamplePoint() {
+	virtual vec3 getLenseSamplePoint() {
 
 		float k1;
 		float k2;		

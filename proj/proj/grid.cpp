@@ -322,10 +322,10 @@ void Grid::InitializeBoundingBox(std::vector<Object*> objects) {
 			p0.z = obb.min.z;
 		if (obb.max.x > p1.x)
 			p1.x = obb.max.x;
-		if (obb.max.x > p1.x)
-			p1.x = obb.max.x;
-		if (obb.max.x > p1.x)
-			p1.x = obb.max.x;
+		if (obb.max.y > p1.y)
+			p1.y = obb.max.y;
+		if (obb.max.z > p1.z)
+			p1.z = obb.max.z;
 	}
 	p0.x -= EPSILON; p0.y -= EPSILON; p0.z -= EPSILON;
 	p1.x += EPSILON; p1.y += EPSILON; p1.z += EPSILON;

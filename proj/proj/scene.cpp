@@ -144,6 +144,9 @@ void Scene::ParsePlane(std::stringstream& sin) {
 	sin >> point1.x >> point1.y >> point1.z;
 	sin >> point2.x >> point2.y >> point2.z;
 	sin >> point3.x >> point3.y >> point3.z;
-	Plane *p = new Plane(point1, point2, point3, this->mat);
+	//Plane *p = new Plane(point1, point2, point3, this->mat);
+	std::vector<vec3> points;
+	points.push_back(point1); points.push_back(point2); points.push_back(point3);
+	Triangle* p = new Triangle(points, this->mat);
 	//objects.push_back(p);
 }

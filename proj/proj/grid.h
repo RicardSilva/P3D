@@ -7,13 +7,12 @@
 #include <array>
 #include <algorithm>
 
-#define EPSILON 0.0001
+#define EPSILON 0.00001
 
 struct Grid {
 
 	BoundingBox bbox;
 	std::vector<std::vector<Object*>> cells;
-	float length, height, width;
 	int nx, ny, nz;
 	int objCount;
 	float m = 2.0f; // factor that allows to vary the number of cells
@@ -22,19 +21,12 @@ struct Grid {
 	Grid(std::vector<Object*> objects) {
 		objCount = objects.size();
 		InitializeBoundingBox(objects);
-
-		length = bbox.GetLength();
-		height = bbox.GetHeight();
-		width = bbox.GetWidth();
-
 		InitializeCells(objects);
 	}
-	~Grid() {
-		//delete [] cells;
-	}
-
+	~Grid() {}
 	
-	bool Traverse(const Ray &ray, Object *&hitobject, vec3 *hitpoint);
+	bool Traverse(const Ray &ray, Object **hitobject, vec3 *hitpoint);
+	bool Traverse(const Ray &ray);
 
 private:
 	void InitializeBoundingBox(std::vector<Object*> objects);

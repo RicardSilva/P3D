@@ -30,7 +30,7 @@
 #define VERTEX_COORD_ATTRIB 0
 #define COLOR_ATTRIB 1
 
-#define MAX_DEPTH 3
+#define MAX_DEPTH 8
 #define ANTI_ALIASING_NUMBER 4	// SQRT OF THE RAYS PER PIXEL IN ANTI-ALIASING MODE OF 1 AND 2
 #define SHADOW_NUMBER 4			// SQRT OF THE NUMBER OF SHADOW FILLERS PER POINT IN SHADOW MODE 2 AND 3
 								// IN SHADOW MODE 3 WE SHOULD HAVE ANTI_ALIASING_NUMBER == SHADOW_NUMBER!!!! 
@@ -38,9 +38,9 @@
 /* Draw Mode: 0 - point by point; 1 - line by line; 2 - full frame */
 int draw_mode = 2;
 /* AntiAliasing Mode: 0 - no aliasing; 1 - iterative random aliasing; 2 - jittering aliasing */
-int antiAliasing_mode = 0;
+int antiAliasing_mode = 2;
 /* Shadows Mode: 0 - hardShadows; 1 - random soft shadows; 2 - iterative random soft shadows; 3 - soft jittering shadows */
-int shadow_mode = 0;
+int shadow_mode = 3;
 int shadow_shuffle = 0;
 /* Acceleration mode: 0 - no acceleration; 1 - grid based acceleration */
 int acceleration_mode = 1;
@@ -126,7 +126,7 @@ vec3 rayTracing(Ray &ray, int depth, float RefrIndex)
 		}
 	}
 	else if (acceleration_mode == 1) {
-		hit = grid.Traverse(ray, closestObj, &closestHitpoint);
+		hit = grid.Traverse(ray, &closestObj, &closestHitpoint);
 	}
 	if (hit == false)
 		return scene->GetBackgroundColor();
@@ -157,12 +157,17 @@ vec3 rayTracing(Ray &ray, int depth, float RefrIndex)
 				hit = false;
 				//trace shadow Ray
 				if (DotProduct(normal, light_direction) > 0) {
-					for (auto &obj : objects) {
-						//check if Object is in shadow by checking if Light Ray collides with any Object
-						if (obj->CheckRayCollision(shadowFiller, nullptr, nullptr) == true) {
-							hit = true;
-							break;
+					if (acceleration_mode == 0) {
+						for (auto &obj : objects) {
+							//check if Object is in shadow by checking if Light Ray collides with any Object
+							if (obj->CheckRayCollision(shadowFiller, nullptr, nullptr) == true) {
+								hit = true;
+								break;
+							}
 						}
+					}
+					else if (acceleration_mode == 1) {
+						hit = grid.Traverse(shadowFiller);
 					}
 					//if not in shadow add Light contributtion to the color of the Object
 					if (hit == false) {
@@ -172,6 +177,7 @@ vec3 rayTracing(Ray &ray, int depth, float RefrIndex)
 				}
 			}
 		}
+		
 		if (depth >= MAX_DEPTH) return color;
 		
 		if (closestObj->isReflective()) {
@@ -188,6 +194,7 @@ vec3 rayTracing(Ray &ray, int depth, float RefrIndex)
 			}
 	
 		}
+		
 	}
 	return color;
 }
@@ -503,7 +510,7 @@ int main(int argc, char* argv[])
 {
 	
 	scene = new Scene();
-	if (!(scene->LoadSceneNFF("scenes/balls_low.nff"))) return 0;
+	if (!(scene->LoadSceneNFF("scenes/mount_very_high.nff"))) return 0;
 	camera = scene->GetCamera();
 	RES_X = camera.resolutionX;
 	RES_Y = camera.resolutionY;

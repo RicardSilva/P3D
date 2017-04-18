@@ -11,6 +11,10 @@ protected:
 	material mat;
 	BoundingBox bb;
 
+	int lastRay = 0;
+	vec3 lastHitpoint = vec3();
+	float lastT = 0;
+
 
 public:
 	Object(const material &mat) : mat(mat) {}

@@ -1,6 +1,5 @@
 #include "boundingbox.h"
 
-
 bool BoundingBox::isInside(const vec3 &point) {
 	float x = point.x;
 	float y = point.y;

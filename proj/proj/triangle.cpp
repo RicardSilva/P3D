@@ -3,6 +3,15 @@
 #define EPSILON 0.000001
 
 bool Triangle::CheckRayCollision(const Ray &Ray, float *distance, vec3 *hitpoint) {
+
+	if (Ray.id == lastRay) {
+		if (distance != nullptr)
+			*distance = lastT;
+		if (hitpoint != nullptr)
+			*hitpoint = lastHitpoint;
+		return true;
+	}
+
 	//Implementation of Tomas Moller algorithm
     //http://www.cs.virginia.edu/~gfx/courses/2003/ImageSynthesis/papers/Acceleration/Fast%20MinimumStorage%20RayTriangle%20Intersection.pdf
 	const vec3 origin = Ray.origin;
@@ -33,10 +42,15 @@ bool Triangle::CheckRayCollision(const Ray &Ray, float *distance, vec3 *hitpoint
 	//collision is behind Ray origin
 	if (t < 0)
 		return false;
+	vec3 hp = origin + direction * t;
+	lastRay = Ray.id;
+	lastHitpoint = hp;
+	lastT = t;
+
 	if (distance != nullptr)
 		*distance = t;
 	if (hitpoint != nullptr)
-		*hitpoint = origin + direction * t;
+		*hitpoint = hp;
 	return true;
 }
 vec3 Triangle::GetNormal(const Ray &Ray, const vec3 &point) {

@@ -510,7 +510,7 @@ int main(int argc, char* argv[])
 {
 	
 	scene = new Scene();
-	if (!(scene->LoadSceneNFF("scenes/mount_very_high.nff"))) return 0;
+	if (!(scene->LoadSceneNFF("scenes/balls_low.nff"))) return 0;
 	camera = scene->GetCamera();
 	RES_X = camera.resolutionX;
 	RES_Y = camera.resolutionY;

@@ -30,14 +30,14 @@
 #define VERTEX_COORD_ATTRIB 0
 #define COLOR_ATTRIB 1
 
-#define MAX_DEPTH 8
+#define MAX_DEPTH 3
 #define ANTI_ALIASING_NUMBER 4	// SQRT OF THE RAYS PER PIXEL IN ANTI-ALIASING MODE OF 1 AND 2
 #define SHADOW_NUMBER 4			// SQRT OF THE NUMBER OF SHADOW FILLERS PER POINT IN SHADOW MODE 2 AND 3
 								// IN SHADOW MODE 3 WE SHOULD HAVE ANTI_ALIASING_NUMBER == SHADOW_NUMBER!!!! 
 
 /* Draw Mode: 0 - point by point; 1 - line by line; 2 - full frame */
 int draw_mode = 2;
-/* AntiAliasing Mode: 0 - no aliasing; 1 - iterative random aliasing; 2 - jittering aliasing */
+/* AntiAliasing Mode: 0 - no anti aliasing; 1 - iterative random anti aliasing; 2 - jittering anti aliasing */
 int antiAliasing_mode = 2;
 /* Shadows Mode: 0 - hardShadows; 1 - random soft shadows; 2 - iterative random soft shadows; 3 - soft jittering shadows */
 int shadow_mode = 3;
@@ -414,7 +414,7 @@ void renderScene()
 
 	end = std::chrono::steady_clock::now();
 	std::cout << std::endl << "Time difference = " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << std::endl;
-	printf("Terminou!\n");
+	//printf("Terminou!\n");
 
 }
 
@@ -510,7 +510,7 @@ int main(int argc, char* argv[])
 {
 	
 	scene = new Scene();
-	if (!(scene->LoadSceneNFF("scenes/balls_low.nff"))) return 0;
+	if (!(scene->LoadSceneNFF("scenes/mount_low.nff"))) return 0;
 	camera = scene->GetCamera();
 	RES_X = camera.resolutionX;
 	RES_Y = camera.resolutionY;

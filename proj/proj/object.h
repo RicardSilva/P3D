@@ -17,6 +17,7 @@ protected:
 
 
 public:
+	Object() : mat() {}
 	Object(const material &mat) : mat(mat) {}
 
 

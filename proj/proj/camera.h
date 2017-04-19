@@ -26,7 +26,7 @@ struct Camera {
 
 public:
 	Camera() {}
-	Camera(vec3 eye, vec3 at, vec3 up, float fovy, float near, float far, int resX, int resY) 
+	Camera(vec3 &eye, vec3 &at, vec3 &up, float fovy, float near, float far, int resX, int resY) 
 		: eye(eye), at(at), up(up), fovy(fovy), nearp(near), farp(far), resolutionX(resX), resolutionY(resY)
 	{
 		srand(time(NULL));
@@ -45,5 +45,7 @@ public:
 	Ray getPrimaryRay(int x, int y);
 	Ray getRandomPrimaryRay(int x, int y); 
 	Ray getJitteredPrimaryRay(int x, int y, int p, int q, int n);
+	virtual vec3 getFocalPoint(Ray &r) { return vec3(); }
+	virtual vec3 getLenseSamplePoint() { return vec3();  }
 };
 

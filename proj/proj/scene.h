@@ -49,8 +49,8 @@ public:
 	void ParsePolygonPatch(std::stringstream& sin);
 	void ParsePlane(std::stringstream& sin);
 
-	Camera GetCamera() {
-		return cam;
+	Camera* GetCamera() {
+		return &cam;
 	}
 	vec3 GetBackgroundColor() {
 		return backgroundColor;

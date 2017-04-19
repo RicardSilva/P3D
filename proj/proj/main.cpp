@@ -24,19 +24,26 @@
 #include "vec.h"
 #include "Ray.h"
 #include "grid.h"
+#include "camera.h"
+#include "lenscamera.h"
 
 #define CAPTION "Ray tracer"
 
 #define VERTEX_COORD_ATTRIB 0
 #define COLOR_ATTRIB 1
 
-#define MAX_DEPTH 8
-#define ANTI_ALIASING_NUMBER 4	// SQRT OF THE RAYS PER PIXEL IN ANTI-ALIASING MODE OF 1 AND 2
-#define SHADOW_NUMBER 4			// SQRT OF THE NUMBER OF SHADOW FILLERS PER POINT IN SHADOW MODE 2 AND 3
+#define MAX_DEPTH 3
+#define ANTI_ALIASING_NUMBER 3  // SQRT OF THE RAYS PER PIXEL IN ANTI-ALIASING MODE OF 1 AND 2
+#define SHADOW_NUMBER 3 		// SQRT OF THE NUMBER OF SHADOW FILLERS PER POINT IN SHADOW MODE 2 AND 3
+#define LENS_NUMBER 2			// SQRT OF THE NUMBER OF SAMPLES OF THE LENS PER ANTI_ALIASING RAY
 								// IN SHADOW MODE 3 WE SHOULD HAVE ANTI_ALIASING_NUMBER == SHADOW_NUMBER!!!! 
 
+#define FOCAL_DISTANCE 0.1
+#define APERTURE 0.1
+
+
 /* Draw Mode: 0 - point by point; 1 - line by line; 2 - full frame */
-int draw_mode = 2;
+int draw_mode = 1;
 /* AntiAliasing Mode: 0 - no aliasing; 1 - iterative random aliasing; 2 - jittering aliasing */
 int antiAliasing_mode = 2;
 /* Shadows Mode: 0 - hardShadows; 1 - random soft shadows; 2 - iterative random soft shadows; 3 - soft jittering shadows */
@@ -44,6 +51,9 @@ int shadow_mode = 3;
 int shadow_shuffle = 0;
 /* Acceleration mode: 0 - no acceleration; 1 - grid based acceleration */
 int acceleration_mode = 1;
+
+/* Camera Mode: 0 - pinhole camera; 1 - lens camera random single ray; 2 - lens camera iterative random rays*/
+int camera_mode = 2;
 
 // Points defined by 2 attributes: positions which are stored in vertices array and colors which are stored in colors array
 float *colors;
@@ -61,7 +71,8 @@ GLuint VertexShaderId, FragmentShaderId, ProgramId;
 GLint UniformId;
 
 Scene* scene = NULL;
-Camera camera;
+
+Camera* cam;
 int RES_X, RES_Y;
 std::vector <Light*> lights;
 std::vector <Object*> objects;
@@ -355,6 +366,7 @@ void renderScene()
 	int index_pos = 0;
 	int index_col = 0;
 	begin = std::chrono::steady_clock::now();
+	
 	for (int y = 0; y < RES_Y; y++)
 	{
 		for (int x = 0; x < RES_X; x++)
@@ -362,29 +374,73 @@ void renderScene()
 			vec3 color = vec3();
 
 			if (antiAliasing_mode == 0) {
-				Ray Ray = camera.getPrimaryRay(x, y);
-				color += rayTracing(Ray, 1, 1.0);
+				int lens_number = 0;
+				if (camera_mode == 2) {
+					lens_number = LENS_NUMBER * LENS_NUMBER;
+				}
+				for (int l = 0; l <= lens_number; l++)
+				{
+					Ray ray = cam->getPrimaryRay(x, y);
+					if (camera_mode > 1) {
+						vec3 focalPoint = cam->getFocalPoint(ray);
+						vec3 samplePoint = cam->getLenseSamplePoint();
+						ray = Ray(samplePoint, (focalPoint - samplePoint).Normalized());
+					}
+					color += rayTracing(ray, 1, 1.0);
+				}
+				if (camera_mode == 2)
+					color /= (LENS_NUMBER * LENS_NUMBER);
 			}
 			else if (antiAliasing_mode == 1) {
 				for (int r = 0; r < ANTI_ALIASING_NUMBER*ANTI_ALIASING_NUMBER; r++)
 				{
-					Ray Ray = camera.getRandomPrimaryRay(x, y);
-					color += rayTracing(Ray, 1, 1.0);
+					int lens_number = 1;
+					if (camera_mode == 2) {
+						lens_number = LENS_NUMBER * LENS_NUMBER;
+					}
+					for (int l = 0; l < lens_number; l++)
+					{
+						Ray ray = cam->getRandomPrimaryRay(x, y);
+						if (camera_mode >= 1) {
+							vec3 focalPoint = cam->getFocalPoint(ray);
+							vec3 samplePoint = cam->getLenseSamplePoint();
+							ray = Ray(samplePoint, (focalPoint - samplePoint).Normalized());
+						}
+						color += rayTracing(ray, 1, 1.0);
+					}
+					
 				}
-				Ray Ray = camera.getPrimaryRay(x, y);
-				color += rayTracing(Ray, 1, 1.0);
+				Ray ray = cam->getPrimaryRay(x, y);
+				color += rayTracing(ray, 1, 1.0);
 				color /= ANTI_ALIASING_NUMBER*ANTI_ALIASING_NUMBER + 1;
+				if (camera_mode == 2)
+					color /= (LENS_NUMBER * LENS_NUMBER);
 			}			
 			else if (antiAliasing_mode == 2) {
 				for (int p = 0; p < ANTI_ALIASING_NUMBER; p++) {
 					for (int q = 0; q < ANTI_ALIASING_NUMBER; q++) {
-						Ray Ray = camera.getJitteredPrimaryRay(x, y, p, q, ANTI_ALIASING_NUMBER);
-						color += rayTracing(Ray, 1, 1.0);
+						int lens_number = 1;
+						if (camera_mode == 2) {
+							lens_number = LENS_NUMBER * LENS_NUMBER;
+						}
+						for (int l = 0; l < lens_number; l++)
+						{
+
+							Ray ray = cam->getJitteredPrimaryRay(x, y, p, q, ANTI_ALIASING_NUMBER);
+							if (camera_mode >= 1) {
+								vec3 focalPoint = cam->getFocalPoint(ray);
+								vec3 samplePoint = cam->getLenseSamplePoint();
+								ray = Ray(samplePoint, (focalPoint - samplePoint).Normalized());
+							}
+							color += rayTracing(ray, 1, 1.0);
+						}
 						if (shadow_mode == 3)
 							shadow_shuffle++;
 					}
 				}
 				color /= (ANTI_ALIASING_NUMBER * ANTI_ALIASING_NUMBER);
+				if (camera_mode == 2)
+					color /= (LENS_NUMBER * LENS_NUMBER);
 				if (shadow_mode == 3)
 					shadow_shuffle++;
 			}
@@ -511,14 +567,19 @@ int main(int argc, char* argv[])
 	
 	scene = new Scene();
 	if (!(scene->LoadSceneNFF("scenes/balls_low.nff"))) return 0;
-	camera = scene->GetCamera();
-	RES_X = camera.resolutionX;
-	RES_Y = camera.resolutionY;
+
+	cam = scene->GetCamera();
+	if (camera_mode >= 1) {
+		cam = new lenscamera(cam, FOCAL_DISTANCE, APERTURE);
+	}
+	RES_X = cam->resolutionX;
+	RES_Y = cam->resolutionY;
 	objects = scene->GetObjects();
 	lights = scene->GetLights();
 	if (acceleration_mode == 1) {
 		grid = Grid(objects);
 	}
+
 	if (draw_mode == 0) { // desenhar o conteúdo da janela ponto a ponto
 		size_vertices = 2 * sizeof(float);
 		size_colors = 3 * sizeof(float);

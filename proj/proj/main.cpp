@@ -38,7 +38,7 @@
 #define LENS_NUMBER 2			// SQRT OF THE NUMBER OF SAMPLES OF THE LENS PER ANTI_ALIASING RAY
 								// IN SHADOW MODE 3 WE SHOULD HAVE ANTI_ALIASING_NUMBER == SHADOW_NUMBER!!!! 
 //BALLS: -0.5; MOUNT: -1.6
-#define FOCAL_DISTANCE -1.6
+#define FOCAL_DISTANCE -0.5
 
 #define APERTURE 0.03
 
@@ -566,7 +566,7 @@ int main(int argc, char* argv[])
 {
 	
 	scene = new Scene();
-	if (!(scene->LoadSceneNFF("scenes/mount_very_high.nff"))) return 0;
+	if (!(scene->LoadSceneNFF("scenes/balls_high.nff"))) return 0;
 
 	cam = scene->GetCamera();
 	if (camera_mode >= 1) {

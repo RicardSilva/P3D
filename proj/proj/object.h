@@ -37,6 +37,7 @@ public:
 	virtual float GetExitRefractionIndex(const Ray &ray) { return 1.0f; }
 	//RETURNS FIRST HIT POINT IF IT EXISTS
 	virtual bool CheckRayCollision(const Ray &ray, float *distance, vec3 *hitpoint) = 0;
+	virtual bool CheckRayCollision(const Ray &ray) = 0;
 	virtual vec3 GetNormal(const Ray &ray, const vec3 &point) = 0;
 
 };

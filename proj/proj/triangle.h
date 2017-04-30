@@ -27,6 +27,7 @@ public:
 	}
 
 	virtual bool CheckRayCollision(const Ray &Ray, float *distance, vec3 *hitpoint);
+	virtual bool CheckRayCollision(const Ray &Ray);
 	virtual vec3 GetNormal(const Ray &Ray, const vec3 &point);
 private:
 	void InitializeBoundingBox(std::vector<vec3> points);

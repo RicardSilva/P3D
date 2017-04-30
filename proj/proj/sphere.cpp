@@ -35,10 +35,8 @@ float Sphere::GetExitRefractionIndex(const Ray &ray) {
 bool Sphere::CheckRayCollision(const Ray &Ray, float *distance, vec3 *hitpoint) {
 
 	if (Ray.id == lastRay) {
-		if (distance != nullptr)
-			*distance = lastT;
-		if (hitpoint != nullptr)
-			*hitpoint = lastHitpoint;
+		*distance = lastT;
+		*hitpoint = lastHitpoint;
 		return true;
 	}
 
@@ -73,12 +71,47 @@ bool Sphere::CheckRayCollision(const Ray &Ray, float *distance, vec3 *hitpoint) 
 	lastHitpoint = hp;
 	lastT = t;
 
-	if (distance != nullptr)
-		*distance = t;
-	if (hitpoint != nullptr)
-		*hitpoint = hp;
+	
+	*distance = t;
+	*hitpoint = hp;
 	return true;
 	
+}
+bool Sphere::CheckRayCollision(const Ray &Ray) {
+
+	if (Ray.id == lastRay) {
+		return true;
+	}
+
+	const vec3 origin = Ray.origin;
+	const vec3 direction = Ray.direction;
+	const float radiusSqr = radius * radius;
+
+	//square of the distance between Ray origin and Sphere centre
+	float d = (centre - origin).sqrMagnitude();
+	if (d == radiusSqr)
+		return false;
+
+	float b = direction.x * (centre.x - origin.x)
+		+ direction.y * (centre.y - origin.y)
+		+ direction.z * (centre.z - origin.z);
+
+	if (d > radiusSqr && b < 0)
+		return false;
+
+	float r = (b * b) - d + radiusSqr;
+	if (r < 0)
+		return false;
+
+	float t;
+	if (d > radiusSqr)
+		t = b - sqrt(r);
+	else
+		t = b + sqrt(r);
+
+	lastRay = Ray.id;
+	return true;
+
 }
 vec3 Sphere::GetNormal(const Ray &Ray, const vec3 &point) {
 	vec3 normal;

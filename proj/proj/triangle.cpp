@@ -5,10 +5,8 @@
 bool Triangle::CheckRayCollision(const Ray &Ray, float *distance, vec3 *hitpoint) {
 
 	if (Ray.id == lastRay) {
-		if (distance != nullptr)
-			*distance = lastT;
-		if (hitpoint != nullptr)
-			*hitpoint = lastHitpoint;
+		*distance = lastT;
+		*hitpoint = lastHitpoint;
 		return true;
 	}
 
@@ -47,10 +45,48 @@ bool Triangle::CheckRayCollision(const Ray &Ray, float *distance, vec3 *hitpoint
 	lastHitpoint = hp;
 	lastT = t;
 
-	if (distance != nullptr)
-		*distance = t;
-	if (hitpoint != nullptr)
-		*hitpoint = hp;
+	*distance = t;
+	*hitpoint = hp;
+	return true;
+}
+bool Triangle::CheckRayCollision(const Ray &Ray) {
+
+	if (Ray.id == lastRay) {
+		return true;
+	}
+
+	//Implementation of Tomas Moller algorithm
+	//http://www.cs.virginia.edu/~gfx/courses/2003/ImageSynthesis/papers/Acceleration/Fast%20MinimumStorage%20RayTriangle%20Intersection.pdf
+	const vec3 origin = Ray.origin;
+	const vec3 direction = Ray.direction;
+	vec3 v0v1 = this->point2 - this->point1;
+	vec3 v0v2 = this->point3 - this->point1;
+	vec3 pvec = CrossProduct(direction, v0v2);
+	float det = DotProduct(v0v1, pvec);
+
+
+	// Ray and Triangle are parallel if det is close to 0
+	if (fabs(det) < EPSILON) return false;
+
+	float invDet = 1 / det;
+
+	vec3 tvec = origin - point1;
+	float u = DotProduct(tvec, pvec) * invDet;
+	if (u < 0 || u > 1)
+		return false;
+
+	vec3 qvec = CrossProduct(tvec, v0v1);
+	float v = DotProduct(direction, qvec) * invDet;
+	if (v < 0 || u + v > 1)
+		return false;
+
+	float t = DotProduct(v0v2, qvec) * invDet;
+
+	//collision is behind Ray origin
+	if (t < 0)
+		return false;
+
+	lastRay = Ray.id;
 	return true;
 }
 vec3 Triangle::GetNormal(const Ray &Ray, const vec3 &point) {

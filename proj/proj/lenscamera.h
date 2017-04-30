@@ -24,7 +24,8 @@ struct lenscamera : public Camera {
 
 	vec3 getFocalPoint(Ray &r) {
 		vec3 hitpoint;
-		focalPlane.CheckRayCollision(r, nullptr, &hitpoint);
+		float t;
+		focalPlane.CheckRayCollision(r, &t, &hitpoint);
 		return hitpoint;
 	}
 
@@ -35,8 +36,10 @@ struct lenscamera : public Camera {
 		vec3 samplePoint;
 		bool insideCircle = false;
 		while (!insideCircle) {
-			k1 = ((double)rand() / (RAND_MAX)) - 0.5;
-			k2 = ((double)rand() / (RAND_MAX)) - 0.5;
+			//random between [-aperture, +aperture]
+			k1 = aperture * 2 * (((double)rand() / (RAND_MAX)) - 0.5); 
+			k2 = aperture * 2 * (((double)rand() / (RAND_MAX)) - 0.5);
+
 			samplePoint = eye + k1 * xe + k2 * ye;
 
 			if ((samplePoint - eye).sqrMagnitude() < aperture * aperture) {

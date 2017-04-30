@@ -17,6 +17,7 @@ public:
 	float GetEnterRefractionIndex(const Ray &ray);
 	float GetExitRefractionIndex(const Ray &ray);
 	virtual bool CheckRayCollision(const Ray &ray, float *distance, vec3 *hitpoint);
+	virtual bool CheckRayCollision(const Ray &Ray);
 	virtual vec3 GetNormal(const Ray &ray, const vec3 &point);
 
 private:

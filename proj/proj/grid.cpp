@@ -1,93 +1,4 @@
 #include "grid.h"
-/*
-bool Grid::Traverse(const Ray &ray) {
-
-	float tnear, tfar;
-	vec3 hitnear, hitfar;
-
-	if (bb.CheckRayCollision(ray, &tnear, &tfar, &hitfar, &hitfar) == false)
-		return false;
-
-	int x, y, z;
-	vec3 origin = ray.origin;
-	vec3 direction = ray.direction;
-	vec3 min = bb.min;
-	vec3 max = bb.max;
-	if (bb.isInside(origin)) {
-		x = clamp((origin.x - min.x) * nx / (max.x - min.x), 0, nx - 1);
-		y = clamp((origin.y - min.y) * ny / (max.y - min.y), 0, ny - 1);
-		z = clamp((origin.z - min.z) * nz / (max.z - min.z), 0, nz - 1);
-	}
-	else {
-		x = clamp((hitnear.x - min.x) * nx / (max.x - min.x), 0, nx - 1);
-		y = clamp((hitnear.y - min.y) * ny / (max.y - min.y), 0, ny - 1);
-		z = clamp((hitnear.z - min.z) * nz / (max.z - min.z), 0, nz - 1);
-	}
-
-	float dtx = (tfar - tnear) / nx;
-	float dty = (tfar - tnear) / ny;
-	float dtz = (tfar - tnear) / nz;
-
-	float nextx, nexty, nextz;
-	int stepx, stepy, stepz;
-	int stopx, stopy, stopz;
-
-	//ray direction (dx, dy, dz)
-	//dx
-	if (direction.x > 0) {
-		nextx = tnear + (x + 1) * dtx;
-		stepx = 1;
-		stopx = nx;
-	}
-	else {
-		nextx = tnear + (nx - x) * dtx;
-		stepx = -1;
-		stopx = -1;
-	}
-	if (direction.x == 0) {
-		nextx = FLT_MAX;
-		stepx = -1;
-		stopx = -1;
-	}
-	//dy
-	if (direction.y > 0) {
-		nexty = tnear + (y + 1) * dty;
-		stepy = 1;
-		stopy = ny;
-	}
-	else {
-		nexty = tnear + (ny - y) * dty;
-		stepy = -1;
-		stopy = -1;
-	}
-	if (direction.y == 0) {
-		nexty = FLT_MAX;
-		stepy = -1;
-		stopy = -1;
-	}
-	//dz
-	if (direction.z > 0) {
-		nextz = tnear + (z + 1) * dtz;
-		stepz = 1;
-		stopz = nz;
-	}
-	else {
-		nextz = tnear + (nz - z) * dtz;
-		stepz = -1;
-		stopz = -1;
-	}
-	if (direction.z == 0) {
-		nextz = FLT_MAX;
-		stepz = -1;
-		stopz = -1;
-	}
-	//loop
-	std::vector<Object*> objs;
-	while (true) {
-		
-	}
-}
-*/
 
 bool Grid::Traverse(const Ray &ray, Object **hitobject, vec3 *hitpoint) {
 	float ox = ray.origin.x;
@@ -506,7 +417,7 @@ bool Grid::Traverse(const Ray &ray) {
 		if (objs.size() != 0) {
 			//intersect Ray with all objects 
 			for (auto &obj : objs) {
-				if (obj->CheckRayCollision(ray, nullptr, nullptr) == true) {
+				if (obj->CheckRayCollision(ray) == true) {
 					return true;
 				}
 			}

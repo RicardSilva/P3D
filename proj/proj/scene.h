@@ -7,6 +7,7 @@
 #include "sphere.h"
 #include "plane.h"
 #include "triangle.h"
+#include "triangleInv.h"
 #include <iostream>
 #include <sstream>
 #include <fstream>

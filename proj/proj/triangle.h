@@ -5,7 +5,7 @@
 #include <vector>
 
 class Triangle : public Object {
-
+protected:
 	vec3 point1;
 	vec3 point2;
 	vec3 point3;

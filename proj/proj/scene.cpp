@@ -85,9 +85,26 @@ bool Scene::LoadSceneNFF(std::string fileName) {
 		{
 			int total_vertices;
 			sin >> total_vertices;
+			std::vector<vec3> points;
+			vec3 point = vec3();
 			for (int i = 0; i < total_vertices; i++) {
+
 				std::getline(ifile, line);
-				ParsePolygonPatch(std::stringstream(line));
+				sin = std::stringstream(line);
+				sin >> point.x >> point.y >> point.z;
+				points.push_back(point);
+			}
+			if (points.size() == 3) {
+				for (int k = 0; k < 3; k++) {
+					
+					
+					Triangle* t = new TriangleInv(points, this->mat);
+					objects.push_back(t);
+					for (auto &p : points) {
+						p.x += 3;
+						p.z += 3;
+					}
+				}
 			}
 		}
 		else if (keyword.compare("pl") == 0) ParsePlane(sin);

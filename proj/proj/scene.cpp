@@ -79,6 +79,23 @@ bool Scene::LoadSceneNFF(std::string fileName) {
 				Triangle* t = new Triangle(points, this->mat);
 				objects.push_back(t);
 			}
+			else if (points.size() == 4) {
+				std::vector<vec3> sub;
+				sub.push_back(points.at(0));
+
+				sub.push_back(points.at(2));
+				sub.push_back(points.at(1));
+				Triangle* t = new Triangle(sub, this->mat);
+				objects.push_back(t);
+
+				std::vector<vec3> sub2;
+				sub2.push_back(points.at(0));
+				sub2.push_back(points.at(3));
+				sub2.push_back(points.at(2));
+				Triangle* t2 = new Triangle(sub2, this->mat);
+				objects.push_back(t2);
+			}
+
 			
 		}
 		else if (keyword.compare("pp") == 0)

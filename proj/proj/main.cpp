@@ -32,15 +32,15 @@
 #define VERTEX_COORD_ATTRIB 0
 #define COLOR_ATTRIB 1
 
-#define MAX_DEPTH 5
+#define MAX_DEPTH 3
 #define ANTI_ALIASING_NUMBER 2  // SQRT OF THE RAYS PER PIXEL IN ANTI-ALIASING MODE OF 1 AND 2
 #define SHADOW_NUMBER 2 		// SQRT OF THE NUMBER OF SHADOW FILLERS PER POINT IN SHADOW MODE 2 AND 3
 #define LENS_NUMBER 3			// SQRT OF THE NUMBER OF SAMPLES OF THE LENS PER ANTI_ALIASING RAY
 								// IN SHADOW MODE 3 WE SHOULD HAVE ANTI_ALIASING_NUMBER == SHADOW_NUMBER!!!! 
 //BALLS: -0.5; BALLS_HIGH: -0.8; MOUNT: -1.6; TEAPOT: -1.6
-#define FOCAL_DISTANCE -1.6
+#define FOCAL_DISTANCE -0.5
 //BALLS: 0.03; MOUNT: 0.02; 
-#define APERTURE 0.20
+#define APERTURE 0.01
 
 
 /* Draw Mode: 0 - point by point; 1 - line by line; 2 - full frame */
@@ -566,7 +566,7 @@ int main(int argc, char* argv[])
 {
 	
 	scene = new Scene();
-	if (!(scene->LoadSceneNFF("scenes/demo.nff"))) return 0;
+	if (!(scene->LoadSceneNFF("scenes/balls_low.nff"))) return 0;
 	
 	cam = scene->GetCamera();
 	if (camera_mode >= 1) {
